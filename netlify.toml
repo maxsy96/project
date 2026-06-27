@@ -9,3 +9,6 @@
 
 [functions]
   included_files = ["prisma/dev.db"]
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
