@@ -29,8 +29,8 @@ AUTH_SECRET=<long random secret>
 DATABASE_URL=file:./prisma/dev.db
 ```
 
-`DATABASE_URL` is already included in `netlify.toml` for the current SQLite seed database.
+`DATABASE_URL` is already included in `netlify.toml`. Netlify creates a fresh seeded SQLite database during build and bundles it into the server function.
 
 ## Production database note
 
-The current app uses SQLite for local development and seeded public content. For a production Netlify site where student registrations, partner submissions, contact messages, and admin edits must persist, move Prisma to a hosted database such as Netlify DB, Neon, Supabase, or another Postgres provider, then set `DATABASE_URL` to that hosted database.
+The current app uses SQLite for local development and seeded public content. For a production Netlify site where student registrations, partner submissions, contact messages, and admin edits must persist across deploys, move Prisma to a hosted database such as Netlify DB, Neon, Supabase, or another Postgres provider, then set `DATABASE_URL` to that hosted database.

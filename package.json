@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:touch": "node -e \"const fs=require('fs');fs.mkdirSync('prisma',{recursive:true});fs.closeSync(fs.openSync('prisma/dev.db','a'));\"",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",

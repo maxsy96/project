@@ -1,8 +1,11 @@
 [build]
-  command = "pnpm run db:generate && pnpm run build"
+  command = "pnpm run db:touch && pnpm run db:generate && pnpm run db:push && pnpm run db:seed && pnpm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
   PNPM_FLAGS = "--shamefully-hoist"
   DATABASE_URL = "file:./prisma/dev.db"
+
+[functions]
+  included_files = ["prisma/dev.db"]
