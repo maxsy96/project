@@ -1,0 +1,50 @@
+[
+  {
+    "slug": "seaworld-research-rescue",
+    "src": "/images/external/seaworld-research-rescue.jpg",
+    "source": "https://www.seaworldabudhabi.com/en/research-and-rescue",
+    "sourceImageUrl": "https://static.myconnect.ae/-/media/yasconnect/project/swad/research-and-rescue/smart-hero/turtle_hero_1920x654.jpg?h=654&w=1920",
+    "width": 1800,
+    "height": 613
+  },
+  {
+    "slug": "bustanica-vertical-farm",
+    "src": "/images/external/bustanica-vertical-farm.jpg",
+    "source": "https://www.bustanica.ae/about",
+    "sourceImageUrl": "https://cdn.prod.website-files.com/670e6251890dd776bedc4b54/6710f3f6245fbb6d821455f0_DESKTOP-HOME.webp",
+    "width": 1202,
+    "height": 630
+  },
+  {
+    "slug": "emirates-bio-farm",
+    "src": "/images/external/emirates-bio-farm.jpg",
+    "source": "https://emiratesbiofarm.com/",
+    "sourceImageUrl": "https://emiratesbiofarm.com/cdn/shop/files/herosection.png?v=1782491051&width=1800",
+    "width": 1551,
+    "height": 1014
+  },
+  {
+    "slug": "ektifa-saba-sanabel",
+    "src": "/images/external/ektifa-saba-sanabel.jpg",
+    "source": "https://dal.shj.ae/en/news/saba-sanabel",
+    "sourceImageUrl": "https://dal.shj.ae/storage/259/f260b067.jpg",
+    "width": 1800,
+    "height": 1199
+  },
+  {
+    "slug": "smsrc-khorfakkan",
+    "src": "/images/external/smsrc-khorfakkan.jpg",
+    "source": "https://www.ukf.ac.ae/en/smsrc/",
+    "sourceImageUrl": "https://www.ukf.ac.ae/smsrc/14.webp",
+    "width": 1800,
+    "height": 1347
+  },
+  {
+    "slug": "wadi-tarabat",
+    "src": "/images/external/wadi-tarabat.jpg",
+    "source": "https://worldbirder.blogspot.com/2012/06/wanderings-in-wadi-tarabat.html",
+    "sourceImageUrl": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhUU0D-k_NlU8s7OncyHmMJinfoUaTZIfZC2eKgCIhwCyvNis5qF0GINVQHBW7679HLZP6U4RKu4wS9B0kmeiNpSWn7F_CyIWifAXsolVRtQZ9mCEyMJXfc7iqRqG8xxlkJE83cDgvA8Vw/s1600/IMG_8702.JPG",
+    "width": 533,
+    "height": 800
+  }
+]

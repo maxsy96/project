@@ -1,0 +1,157 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Opportunity {
+  id                  Int      @id @default(autoincrement())
+  title               String
+  slug                String   @unique
+  organization        String
+  type                String
+  sectors             String
+  location            String
+  isRemote            Boolean  @default(false)
+  isAbroad            Boolean  @default(false)
+  isGovernmentRelated Boolean  @default(false)
+  paidStatus          String
+  deadline            DateTime?
+  description         String
+  eligibility         String
+  requirements        String   @default("")
+  benefits            String   @default("")
+  applicationUrl      String   @default("")
+  contactEmail        String   @default("")
+  status              String   @default("open")
+  source              String   @default("Club curated")
+  submittedByPartner  Boolean  @default(false)
+  approvalStatus      String   @default("approved")
+  imageUrl            String   @default("")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model StudentInterest {
+  id                     Int      @id @default(autoincrement())
+  fullName               String
+  studentId              String   @default("")
+  email                  String
+  phone                  String   @default("")
+  academicYear           String
+  major                  String
+  interests              String
+  opportunityPreferences String
+  preferredLocations     String
+  availability           String
+  goals                  String
+  consent                Boolean
+  createdAt              DateTime @default(now())
+}
+
+model Event {
+  id              Int      @id @default(autoincrement())
+  title           String
+  slug            String   @unique
+  date            DateTime
+  time            String
+  location        String
+  description     String
+  category        String
+  organizer       String
+  registrationUrl String   @default("")
+  imageUrl        String   @default("")
+  status          String   @default("upcoming")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Achievement {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  category    String
+  year        Int
+  date        DateTime?
+  imageUrl    String   @default("")
+  externalUrl String   @default("")
+  createdAt   DateTime @default(now())
+}
+
+model MediaItem {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  category    String
+  mediaType   String
+  imageUrl    String   @default("")
+  videoUrl    String   @default("")
+  date        DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model Member {
+  id             Int      @id @default(autoincrement())
+  name           String
+  studentId      String   @default("")
+  email          String   @default("")
+  role           String
+  committee      String
+  areaOfInterest String
+  bio            String
+  imageUrl       String   @default("")
+  socialUrl      String   @default("")
+  order          Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+}
+
+model Alumni {
+  id             Int      @id @default(autoincrement())
+  name           String
+  graduationYear String
+  currentRole    String
+  sector         String
+  story          String
+  advice         String
+  imageUrl       String   @default("")
+  socialUrl      String   @default("")
+  createdAt      DateTime @default(now())
+}
+
+model PartnerSubmission {
+  id                Int      @id @default(autoincrement())
+  organizationName  String
+  contactPerson     String
+  email             String
+  phone             String   @default("")
+  opportunityTitle  String
+  opportunityType   String
+  sectors           String
+  description       String
+  location          String
+  deadline          DateTime?
+  eligibility       String
+  applicationUrl    String   @default("")
+  notes             String   @default("")
+  approvalStatus    String   @default("pending")
+  createdAt         DateTime @default(now())
+}
+
+model ContactSubmission {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    String   @default("unread")
+  createdAt DateTime @default(now())
+}

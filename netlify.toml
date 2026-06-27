@@ -1,0 +1,8 @@
+[build]
+  command = "pnpm run db:generate && pnpm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_FLAGS = "--shamefully-hoist"
+  DATABASE_URL = "file:./prisma/dev.db"
