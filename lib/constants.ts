@@ -74,6 +74,15 @@ export const eventCategories = [
   "Research",
   "Culture",
   "Leadership",
+  "International",
+] as const;
+
+export const eventStatuses = [
+  "upcoming",
+  "closing soon",
+  "completed",
+  "closed",
+  "cancelled",
 ] as const;
 
 export const officialLinks = [
@@ -83,7 +92,7 @@ export const officialLinks = [
   { label: "Opportunity Hub", href: "/opportunities", note: "Browse internships, visits, roles, and programs" },
   { label: "Register Interest", href: "/register-interest", note: "Receive matched opportunities" },
   { label: "Events", href: "/events", note: "Upcoming and past CAVM activities" },
-  { label: "Alumni Story", href: "/alumni", note: "Share where you are now" },
+  { label: "Alumni & Achievements", href: "/achievements", note: "Alumni stories and club impact" },
   { label: "Partner With Us", href: "/partners", note: "Submit student opportunities" },
   { label: "Contact", href: "/contact", note: "Questions and collaboration requests" },
 ];

@@ -11,15 +11,20 @@ type Achievement = {
   category: string;
   year: number;
   imageUrl: string;
+  externalUrl?: string;
 };
 
 export function AchievementExplorer({ achievements }: { achievements: Achievement[] }) {
   const [year, setYear] = useState("");
   const [category, setCategory] = useState("");
+  const [sort, setSort] = useState("newest");
   const years = Array.from(new Set(achievements.map((achievement) => achievement.year))).sort((a, b) => b - a);
 
   const filtered = achievements.filter((achievement) => {
     return (!year || String(achievement.year) === year) && (!category || achievement.category === category);
+  }).sort((a, b) => {
+    if (sort === "chronological") return a.year - b.year;
+    return b.year - a.year;
   });
 
   return (
@@ -32,6 +37,10 @@ export function AchievementExplorer({ achievements }: { achievements: Achievemen
         <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-md border border-slate-300 px-3 py-3 text-sm">
           <option value="">All categories</option>
           {achievementCategories.map((item) => <option key={item}>{item}</option>)}
+        </select>
+        <select value={sort} onChange={(event) => setSort(event.target.value)} className="rounded-md border border-slate-300 px-3 py-3 text-sm">
+          <option value="newest">Newest first</option>
+          <option value="chronological">Chronological order</option>
         </select>
       </div>
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">

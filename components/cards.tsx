@@ -101,6 +101,7 @@ type AchievementLike = {
   category: string;
   year: number;
   imageUrl: string;
+  externalUrl?: string;
 };
 
 export function AchievementCard({ achievement }: { achievement: AchievementLike }) {
@@ -115,6 +116,11 @@ export function AchievementCard({ achievement }: { achievement: AchievementLike 
       </div>
       <h3 className="mt-4 text-xl font-semibold text-slate-950">{achievement.title}</h3>
       <p className="mt-3 text-sm leading-6 text-slate-600">{achievement.description}</p>
+      {achievement.externalUrl ? (
+        <Link href={achievement.externalUrl} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-900">
+          Open related archive <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      ) : null}
     </article>
   );
 }

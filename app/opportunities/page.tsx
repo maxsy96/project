@@ -16,7 +16,7 @@ export default async function OpportunitiesPage() {
     <>
       <PageHero
         eyebrow="CAVM Opportunity Hub"
-        title="One organized place for student opportunities."
+        title="An organized platform for student opportunities."
         description="Search and filter internships, volunteering roles, research assistant roles, farm visits, jobs, training programs, scholarships, competitions, conferences, government opportunities, and programs abroad."
       />
       <section className="mx-auto max-w-7xl px-5 py-14 md:px-8">

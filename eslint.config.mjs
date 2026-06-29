@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     ".netlify/**",
     "out/**",
     "build/**",
+    "scripts/**",
+    "netlify-plugins/**",
     "next-env.d.ts",
   ]),
 ]);

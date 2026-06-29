@@ -13,6 +13,13 @@ const values = [
   ["Sustainability", "Food security, environment, waste reduction, and responsible production shape the club identity.", FlaskConical],
 ];
 
+const siteReasons = [
+  ["Fair Access", "Opportunities should be visible to everyone, not only to those who already know where to look.", ShieldCheck],
+  ["Public Memory", "Photos, PDFs, timelines, and event records preserve the club's work and make it easier for future committees to build on.", Sprout],
+  ["External Trust", "A clear record of the club's activities helps partners understand its value before offering visits, roles, or collaborations.", HandHeart],
+  ["Student Growth", "More students can find pathways into field learning, volunteering, research, leadership, and representation.", Leaf],
+];
+
 export default function AboutPage() {
   return (
     <>
@@ -40,6 +47,24 @@ export default function AboutPage() {
               To become a trusted student-led platform where opportunities, achievements, alumni stories, and partnerships are easy to discover and easy to act on.
             </p>
           </article>
+        </div>
+      </section>
+      <section className="bg-white">
+        <div className="mx-auto max-w-7xl px-5 py-14 md:px-8">
+          <SectionHeader
+            eyebrow="Why the site exists"
+            title="A public record and a fairer access point"
+            description="The hub is more than a public display. It helps current students, alumni, faculty, and external partners understand the club's impact, explore past achievements, and discover where new opportunities can grow."
+          />
+          <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            {siteReasons.map(([title, text, Icon]) => (
+              <article key={title as string} className="rounded-lg border border-emerald-100 bg-emerald-50 p-5">
+                <Icon className="h-6 w-6 text-emerald-700" aria-hidden="true" />
+                <h3 className="mt-4 text-lg font-semibold text-slate-950">{title as string}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{text as string}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
       <section className="bg-white">

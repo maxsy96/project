@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { ArrowRight, Building2, CalendarDays, Handshake, Newspaper, ShieldCheck, UsersRound } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { getStoredEvents, storedEventToView } from "@/lib/admin-content-store";
+import { isActiveEventStatus, mergeEventsBySlug, sortEventsForDisplay } from "@/lib/event-utils";
 import { ButtonLink, SectionHeader } from "@/components/ui";
 import { OpportunityCard, EventCard, AchievementCard } from "@/components/cards";
 import { officialLinks } from "@/lib/constants";
@@ -22,10 +24,30 @@ const features = [
 
 const homeHeroSlides: HomeSlide[] = [
   {
+    title: "CAVM Week Festival Organization",
+    eyebrow: "CAVM Week",
+    imageUrl: "/images/archive/cavm-week-2026/cavm-week-2026-01.jpeg",
+    href: "/events/cavm-week-festival",
+    imagePosition: "center 38%",
+  },
+  {
+    title: "Student Engagement During CAVM Week",
+    eyebrow: "Festival week",
+    imageUrl: "/images/archive/cavm-week-2026/cavm-week-2026-05.jpeg",
+    href: "/media#cavm-week-2026",
+    imagePosition: "center 42%",
+  },
+  {
     title: "CAVM Students at the UAE Agricultural Conference",
     eyebrow: "Agriculture",
-    imageUrl: "/images/home-submitted/agriculture-conference-team.jpeg",
-    href: "/achievements",
+    imageUrl: "/images/archive/agriculture-conference-exhibition-2026/agriculture-conference-exhibition-2026-09.jpeg",
+    href: "/events/uae-agricultural-conference-and-sector-exhibition-2026",
+  },
+  {
+    title: "Youth in Sustainability Dialogue",
+    eyebrow: "Sustainability",
+    imageUrl: "/images/archive/youth-sustainability-dialogue-2026/youth-sustainability-dialogue-2026-09.jpeg",
+    href: "/events/youth-in-sustainability-dialogue-session",
   },
   {
     title: "Date Palm Product Showcase",
@@ -61,8 +83,8 @@ const homeHeroSlides: HomeSlide[] = [
   {
     title: "Al Foah Research Farm Group Visit",
     eyebrow: "Research farm",
-    imageUrl: "/images/home-submitted/al-foah-research-farm-group.jpeg",
-    href: "/media",
+    imageUrl: "/images/archive/uaeu-chancellor-visit-2026/uaeu-chancellor-visit-2026-07.jpeg",
+    href: "/events/uaeu-chancellor-s-visit-to-al-foah-research-farm",
   },
   {
     title: "Veterinary Medicine Booth Team",
@@ -110,21 +132,30 @@ const homeHeroSlides: HomeSlide[] = [
 ];
 
 const featuredAchievementTitles = [
-  "Liwa Date Festival Participation",
-  "Al Foah Farm Student Gathering",
-  "Future+ International Exchange Program",
+  "CAVM Week Festival Organization",
+  "UAEU Chancellor's Visit to Al Foah Research Farm",
+  "UAE Agricultural Conference and Sector Exhibition 2026",
+  "Youth in Sustainability Dialogue Session",
+  "Date Palm Research and Products Showcase",
+  "ADIFE 2025 / Global Food Week Engagement",
 ];
 
 export default async function Home() {
-  const [opportunities, events, achievementRows] = await Promise.all([
+  const [opportunities, databaseEvents, storedEvents, achievementRows] = await Promise.all([
     prisma.opportunity.findMany({
       where: { approvalStatus: "approved" },
       orderBy: [{ status: "asc" }, { deadline: "asc" }],
       take: 3,
     }),
     prisma.event.findMany({ where: { status: "upcoming" }, orderBy: { date: "asc" }, take: 3 }),
+    getStoredEvents(),
     prisma.achievement.findMany({ where: { title: { in: featuredAchievementTitles } } }),
   ]);
+  const events = [
+    ...storedEvents.map(storedEventToView),
+    ...databaseEvents,
+  ];
+  const visibleEvents = sortEventsForDisplay(mergeEventsBySlug(events)).filter((event) => isActiveEventStatus(event.status)).slice(0, 3);
   const achievementMap = new Map(achievementRows.map((achievement) => [achievement.title, achievement]));
   const achievements = featuredAchievementTitles
     .map((title) => achievementMap.get(title))
@@ -172,11 +203,15 @@ export default async function Home() {
             description="The CAVM Opportunity Hub gathers internships, volunteering roles, research positions, farm visits, jobs, training programs, scholarships, competitions, conferences, government opportunities, and programs abroad in one organized platform."
           />
           <div className="grid gap-4 sm:grid-cols-3">
-            {["Wider access", "New faces", "Better matching"].map((item) => (
-              <div key={item} className="rounded-lg bg-emerald-50 p-5">
+            {[
+              ["Wider access", "More students can see what is available, apply with confidence, and take part without missing hidden or scattered opportunities."],
+              ["New faces", "The hub helps more students get noticed, participate, and become involved in college activities and external opportunities."],
+              ["Smarter matching", "Students can find opportunities that fit their interests, skills, academic level, and career goals more quickly."],
+            ].map(([title, text]) => (
+              <div key={title} className="rounded-lg bg-emerald-50 p-5">
                 <Building2 className="h-6 w-6 text-emerald-700" aria-hidden="true" />
-                <p className="mt-4 text-lg font-semibold text-slate-950">{item}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">A more organized system helps more CAVM students participate and represent the college.</p>
+                <p className="mt-4 text-lg font-semibold text-slate-950">{title}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
               </div>
             ))}
           </div>
@@ -197,7 +232,7 @@ export default async function Home() {
         <div className="mx-auto max-w-7xl px-5 py-14 md:px-8">
           <SectionHeader eyebrow="Events" title="Upcoming club activity" description="Field learning, workshops, and public-facing activities connected to CAVM student development." />
           <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {events.map((event) => <EventCard key={event.id} event={event} />)}
+            {visibleEvents.map((event) => <EventCard key={event.id} event={event} />)}
           </div>
         </div>
       </section>

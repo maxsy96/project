@@ -7,21 +7,19 @@ const navItems = [
   ["Home", "/"],
   ["About", "/about"],
   ["History", "/history"],
-  ["Achievements", "/achievements"],
+  ["Alumni & Achievements", "/achievements"],
   ["Events", "/events"],
   ["Media", "/media"],
   ["Members", "/members"],
-  ["Alumni", "/alumni"],
   ["Opportunity Hub", "/opportunities"],
   ["Partners", "/partners"],
-  ["Official Links", "/links"],
-  ["Contact", "/contact"],
+  ["Contact & Links", "/contact"],
 ];
 
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto grid max-w-[92rem] grid-cols-[auto_auto] items-center justify-between gap-4 px-5 py-3 md:px-8 2xl:grid-cols-[auto_minmax(0,1fr)_auto]">
+      <div className="mx-auto grid max-w-[92rem] grid-cols-[auto_auto] items-center justify-between gap-4 px-5 py-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="CAVM Club home">
           <Image src="/images/brand/cavm-logo.png" alt="" width={68} height={68} className="h-16 w-16 rounded-full bg-white object-contain" />
           <span className="leading-tight">
@@ -30,12 +28,12 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden min-w-0 items-center justify-center gap-1 2xl:flex" aria-label="Primary navigation">
+        <nav className="hidden min-w-0 items-center justify-start gap-1 overflow-x-auto md:flex xl:justify-center" aria-label="Primary navigation">
           {navItems.map(([label, href]) => (
             <Link
               key={href}
               href={href}
-              className={`whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium hover:bg-slate-100 hover:text-slate-950 ${label === "Home" ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100" : "text-slate-700"}`}
+              className="whitespace-nowrap rounded-md px-2 py-2 text-xs font-medium text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800 hover:ring-1 hover:ring-emerald-100 lg:px-2.5 lg:text-sm"
             >
               {label}
             </Link>
@@ -44,19 +42,19 @@ export function Navbar() {
 
         <Link
           href="/register-interest"
-          className="hidden shrink-0 rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 2xl:inline-flex"
+          className="hidden shrink-0 rounded-md bg-slate-950 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 md:inline-flex lg:px-4 lg:text-sm"
         >
           Register Interest
         </Link>
 
-        <details className="relative 2xl:hidden">
+        <details className="relative md:hidden">
           <summary className="flex cursor-pointer list-none items-center rounded-md border border-slate-200 p-2 text-slate-700">
             <Menu className="h-5 w-5" aria-hidden="true" />
             <span className="sr-only">Open menu</span>
           </summary>
           <div className="absolute right-0 mt-3 w-72 rounded-lg border border-slate-200 bg-white p-2 shadow-xl">
             {navItems.map(([label, href]) => (
-              <Link key={href} href={href} className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
+              <Link key={href} href={href} className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800">
                 {label}
               </Link>
             ))}

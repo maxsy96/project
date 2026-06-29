@@ -1,4 +1,4 @@
-import { opportunityTypes, sectors, eventCategories, achievementCategories } from "@/lib/constants";
+import { opportunityTypes, sectors, eventCategories, eventStatuses, achievementCategories } from "@/lib/constants";
 import { format } from "date-fns";
 import { fromJsonList } from "@/lib/utils";
 
@@ -22,6 +22,19 @@ type Opportunity = {
   status?: string;
   source?: string;
   imageUrl?: string;
+};
+
+type EventItem = {
+  title?: string;
+  date?: Date | null;
+  time?: string;
+  location?: string;
+  description?: string;
+  category?: string;
+  organizer?: string;
+  registrationUrl?: string;
+  imageUrl?: string;
+  status?: string;
 };
 
 function Input({ name, label, defaultValue = "", type = "text", required = false }: { name: string; label: string; defaultValue?: string; type?: string; required?: boolean }) {
@@ -101,6 +114,36 @@ export function OpportunityAdminForm({ action, opportunity }: { action: (formDat
   );
 }
 
+export function EventAdminForm({ action, event }: { action: (formData: FormData) => void | Promise<void>; event?: EventItem }) {
+  return (
+    <form action={action} className="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="grid gap-4 md:grid-cols-2">
+        <Input name="title" label="Title" defaultValue={event?.title} required />
+        <Input name="date" label="Date" type="date" defaultValue={dateInputValue(event?.date)} required />
+        <Input name="time" label="Time" defaultValue={event?.time} required />
+        <Input name="location" label="Location" defaultValue={event?.location} required />
+        <label className="block text-sm font-semibold text-slate-800">
+          Category
+          <select name="category" defaultValue={event?.category || "Field visit"} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
+            {eventCategories.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </label>
+        <label className="block text-sm font-semibold text-slate-800">
+          Status
+          <select name="status" defaultValue={event?.status || "upcoming"} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
+            {eventStatuses.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </label>
+        <Input name="organizer" label="Organizer" defaultValue={event?.organizer || "CAVM Club"} />
+        <Input name="registrationUrl" label="Registration URL" defaultValue={event?.registrationUrl} />
+        <Input name="imageUrl" label="Image URL" defaultValue={event?.imageUrl} />
+      </div>
+      <TextArea name="description" label="Description" defaultValue={event?.description} required />
+      <button className="rounded-md bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800">Save event</button>
+    </form>
+  );
+}
+
 export function SimpleContentForm({ kind, action }: { kind: "event" | "achievement" | "media" | "member" | "alumni"; action: (formData: FormData) => void | Promise<void> }) {
   return (
     <form action={action} className="grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -113,7 +156,7 @@ export function SimpleContentForm({ kind, action }: { kind: "event" | "achieveme
           <Input name="organizer" label="Organizer" defaultValue="CAVM Club" />
           <Input name="registrationUrl" label="Registration URL" />
           <Input name="imageUrl" label="Image URL" />
-          <label className="block text-sm font-semibold text-slate-800">Status<select name="status" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm"><option>upcoming</option><option>completed</option><option>cancelled</option></select></label>
+          <label className="block text-sm font-semibold text-slate-800">Status<select name="status" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">{eventStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
           <TextArea name="description" label="Description" required />
         </>
       ) : null}

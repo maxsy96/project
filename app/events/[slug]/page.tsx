@@ -2,27 +2,54 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { eventRegistrationAction } from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
+import { getStoredEventBySlug, storedEventToView } from "@/lib/admin-content-store";
 import { ButtonLink, PageHero, Pill, StatusBadge } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { getArchiveManifest } from "@/lib/archive";
+import { isActiveEventStatus } from "@/lib/event-utils";
 
 export const dynamic = "force-dynamic";
 
+function eventDurationLabel(category: string, title: string, description: string) {
+  const text = `${category} ${title} ${description}`.toLowerCase();
+  if (text.includes("four-week") || text.includes("4-week")) return "4 weeks";
+  if (category === "Field visit") return "Half-day to full-day visit";
+  if (category === "Workshop") return "Workshop duration shared before the event";
+  if (category === "Conference") return "Scheduled session or conference-day activity";
+  if (category === "Leadership" || category === "Culture" || category === "Community") return "Event-day activity; shifts may vary";
+  return "Duration confirmed with event details";
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const event = await prisma.event.findUnique({ where: { slug } });
+  const [databaseEvent, storedEvent] = await Promise.all([
+    prisma.event.findUnique({ where: { slug } }),
+    getStoredEventBySlug(slug),
+  ]);
+  const event = storedEvent ? storedEventToView(storedEvent) : databaseEvent;
   return { title: event?.title ?? "Event" };
 }
 
-export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function EventDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ registered?: string }>;
+}) {
   const { slug } = await params;
-  const [event, archive] = await Promise.all([
+  const { registered } = await searchParams;
+  const [databaseEvent, storedEvent, archive] = await Promise.all([
     prisma.event.findUnique({ where: { slug } }),
+    getStoredEventBySlug(slug),
     getArchiveManifest(),
   ]);
+  const event = storedEvent ? storedEventToView(storedEvent) : databaseEvent;
   if (!event) notFound();
   const albums = archive.albums.filter((album) => album.eventSlug === event.slug);
+  const registrationOpen = isActiveEventStatus(event.status);
 
   return (
     <>
@@ -45,16 +72,65 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <dl className="mt-6 grid gap-4 rounded-lg bg-slate-50 p-5 sm:grid-cols-2">
             <div><dt className="text-sm font-semibold text-slate-500">Date</dt><dd className="mt-1 font-medium">{formatDate(event.date)}</dd></div>
             <div><dt className="text-sm font-semibold text-slate-500">Time</dt><dd className="mt-1 font-medium">{event.time}</dd></div>
+            <div><dt className="text-sm font-semibold text-slate-500">Expected duration</dt><dd className="mt-1 font-medium">{eventDurationLabel(event.category, event.title, event.description)}</dd></div>
             <div><dt className="text-sm font-semibold text-slate-500">Location</dt><dd className="mt-1 font-medium">{event.location}</dd></div>
             <div><dt className="text-sm font-semibold text-slate-500">Organizer</dt><dd className="mt-1 font-medium">{event.organizer}</dd></div>
           </dl>
         </article>
         <aside className="h-fit rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-950">Interested in events like this?</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Register your interests so CAVM Club can match you with relevant visits, workshops, and programs.</p>
-          <div className="mt-5">
-            <ButtonLink href={event.registrationUrl || "/register-interest"}>Register interest</ButtonLink>
-          </div>
+          <h2 className="text-lg font-semibold text-slate-950">Register for this event</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Submit your details and CAVM Club will receive them directly for event follow-up.</p>
+          {registered === "1" ? (
+            <p className="mt-4 rounded-md bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
+              Registration received. The club team has your details.
+            </p>
+          ) : null}
+          {registered === "error" ? (
+            <p className="mt-4 rounded-md bg-red-50 p-3 text-sm font-semibold text-red-800">
+              Please enter your name and a valid email address.
+            </p>
+          ) : null}
+          {registrationOpen ? (
+            <form action={eventRegistrationAction} className="mt-5 grid gap-4">
+              <input type="hidden" name="eventTitle" value={event.title} />
+              <input type="hidden" name="eventSlug" value={event.slug} />
+              <label className="block text-sm font-semibold text-slate-800">
+                Full name
+                <input name="name" required className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
+              </label>
+              <label className="block text-sm font-semibold text-slate-800">
+                Email
+                <input name="email" type="email" required className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
+              </label>
+              <label className="block text-sm font-semibold text-slate-800">
+                Student ID
+                <input name="studentId" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
+              </label>
+              <label className="block text-sm font-semibold text-slate-800">
+                Phone
+                <input name="phone" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
+              </label>
+              <label className="block text-sm font-semibold text-slate-800">
+                Notes
+                <textarea name="message" rows={3} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
+              </label>
+              <button className="rounded-md bg-emerald-700 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-800">
+                Send event registration
+              </button>
+              {event.registrationUrl ? (
+                <a href={event.registrationUrl} className="text-center text-sm font-semibold text-emerald-700 hover:text-emerald-900">
+                  Open external event link
+                </a>
+              ) : null}
+            </form>
+          ) : (
+            <div className="mt-5">
+              <p className="rounded-md bg-slate-100 p-3 text-sm font-semibold text-slate-700">Registration is closed for this event.</p>
+              <div className="mt-4">
+                <ButtonLink href="/register-interest" variant="secondary">Register future interests</ButtonLink>
+              </div>
+            </div>
+          )}
         </aside>
       </section>
       {albums.length ? (

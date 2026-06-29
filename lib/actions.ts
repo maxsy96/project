@@ -54,6 +54,16 @@ const contactSchema = z.object({
   message: z.string().min(10, "Message should be at least 10 characters."),
 });
 
+const eventRegistrationSchema = z.object({
+  eventTitle: z.string().min(2, "Event title is required."),
+  eventSlug: z.string().min(1, "Event slug is required."),
+  name: z.string().min(2, "Name is required."),
+  email: emailSchema,
+  studentId: z.string().optional(),
+  phone: z.string().optional(),
+  message: z.string().optional(),
+});
+
 function validationState(error: z.ZodError): ActionState {
   return {
     ok: false,
@@ -97,6 +107,19 @@ export async function registerInterestAction(_state: ActionState, formData: Form
   await queueNotification(
     "New CAVM student interest registration",
     `${student.fullName} registered for ${parsed.data.interests.join(", ")} opportunities.`,
+    [
+      ["Name", student.fullName],
+      ["Student ID", student.studentId],
+      ["Email", student.email],
+      ["Phone", student.phone],
+      ["Academic year", student.academicYear],
+      ["Major/program", student.major],
+      ["Interest sectors", parsed.data.interests.join(", ")],
+      ["Opportunity preferences", parsed.data.opportunityPreferences.join(", ")],
+      ["Preferred locations", parsed.data.preferredLocations.join(", ")],
+      ["Availability", student.availability],
+      ["Goals", student.goals],
+    ],
   );
 
   revalidatePath("/admin/students");
@@ -140,6 +163,21 @@ export async function partnerSubmissionAction(_state: ActionState, formData: For
   await queueNotification(
     "New partner opportunity submitted",
     `${parsed.data.organizationName} submitted ${parsed.data.opportunityTitle}.`,
+    [
+      ["Organization", parsed.data.organizationName],
+      ["Contact person", parsed.data.contactPerson],
+      ["Email", parsed.data.email],
+      ["Phone", parsed.data.phone],
+      ["Opportunity title", parsed.data.opportunityTitle],
+      ["Opportunity type", parsed.data.opportunityType],
+      ["Sectors", parsed.data.sectors.join(", ")],
+      ["Location", parsed.data.location],
+      ["Deadline", parsed.data.deadline],
+      ["Eligibility", parsed.data.eligibility],
+      ["Application link", parsed.data.applicationUrl],
+      ["Description", parsed.data.description],
+      ["Notes", parsed.data.notes],
+    ],
   );
 
   revalidatePath("/admin/partner-submissions");
@@ -159,7 +197,16 @@ export async function contactAction(_state: ActionState, formData: FormData): Pr
   if (!parsed.success) return validationState(parsed.error);
 
   await prisma.contactSubmission.create({ data: parsed.data });
-  await queueNotification("New CAVM website contact message", `${parsed.data.name}: ${parsed.data.subject}`);
+  await queueNotification(
+    "New CAVM website contact message",
+    `${parsed.data.name}: ${parsed.data.subject}`,
+    [
+      ["Name", parsed.data.name],
+      ["Email", parsed.data.email],
+      ["Subject", parsed.data.subject],
+      ["Message", parsed.data.message],
+    ],
+  );
   revalidatePath("/admin/contact-submissions");
 
   return { ok: true, message: "Message received. The club team can follow up from the admin dashboard." };
@@ -167,16 +214,77 @@ export async function contactAction(_state: ActionState, formData: FormData): Pr
 
 export async function interestedAction(formData: FormData) {
   const opportunityTitle = formString(formData, "opportunityTitle");
+  const name = formString(formData, "name") || "Interested student";
+  const email = formString(formData, "email");
+  const message = formString(formData, "message") || `A student clicked interested for ${opportunityTitle}.`;
+
   await prisma.contactSubmission.create({
     data: {
-      name: formString(formData, "name") || "Interested student",
-      email: formString(formData, "email"),
+      name,
+      email,
       subject: `Interested in ${opportunityTitle}`,
-      message: formString(formData, "message") || `A student clicked interested for ${opportunityTitle}.`,
+      message,
     },
   });
+  await queueNotification(
+    `New interest in ${opportunityTitle}`,
+    `${name} submitted interest from an opportunity page.`,
+    [
+      ["Opportunity", opportunityTitle],
+      ["Name", name],
+      ["Email", email],
+      ["Message", message],
+    ],
+  );
   revalidatePath("/admin/contact-submissions");
   redirect("/contact?sent=interest");
+}
+
+export async function eventRegistrationAction(formData: FormData) {
+  const parsed = eventRegistrationSchema.safeParse({
+    eventTitle: formString(formData, "eventTitle"),
+    eventSlug: formString(formData, "eventSlug"),
+    name: formString(formData, "name"),
+    email: formString(formData, "email"),
+    studentId: formString(formData, "studentId"),
+    phone: formString(formData, "phone"),
+    message: formString(formData, "message"),
+  });
+
+  if (!parsed.success) {
+    redirect(`/events/${formString(formData, "eventSlug")}?registered=error`);
+  }
+
+  const message = parsed.data.message || `Registration request for ${parsed.data.eventTitle}.`;
+
+  await prisma.contactSubmission.create({
+    data: {
+      name: parsed.data.name,
+      email: parsed.data.email,
+      subject: `Event registration: ${parsed.data.eventTitle}`,
+      message: [
+        message,
+        parsed.data.studentId ? `Student ID: ${parsed.data.studentId}` : "",
+        parsed.data.phone ? `Phone: ${parsed.data.phone}` : "",
+      ].filter(Boolean).join("\n"),
+    },
+  });
+
+  await queueNotification(
+    `New event registration: ${parsed.data.eventTitle}`,
+    `${parsed.data.name} registered interest for an upcoming CAVM Club event.`,
+    [
+      ["Event", parsed.data.eventTitle],
+      ["Name", parsed.data.name],
+      ["Student ID", parsed.data.studentId],
+      ["Email", parsed.data.email],
+      ["Phone", parsed.data.phone],
+      ["Message", message],
+    ],
+  );
+
+  revalidatePath("/admin/contact-submissions");
+  redirect(`/events/${parsed.data.eventSlug}?registered=1`);
 }
 
 export async function makeOpportunitySlug(title: string) {

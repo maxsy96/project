@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getStoredEvents, storedEventToView } from "@/lib/admin-content-store";
 import { AdminShell } from "@/components/admin-shell";
 import { StatusBadge } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
@@ -13,7 +14,8 @@ export default async function AdminOverviewPage() {
     openOpportunities,
     students,
     partnerSubmissions,
-    upcomingEvents,
+    databaseUpcomingEvents,
+    storedEvents,
     recentMessages,
   ] = await Promise.all([
     prisma.opportunity.count(),
@@ -21,8 +23,13 @@ export default async function AdminOverviewPage() {
     prisma.studentInterest.count(),
     prisma.partnerSubmission.count(),
     prisma.event.findMany({ where: { status: "upcoming" }, orderBy: { date: "asc" }, take: 5 }),
+    getStoredEvents(),
     prisma.contactSubmission.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
   ]);
+  const upcomingEvents = [
+    ...storedEvents.map(storedEventToView).filter((event) => event.status === "upcoming"),
+    ...databaseUpcomingEvents,
+  ].sort((a, b) => a.date.getTime() - b.date.getTime()).slice(0, 5);
 
   return (
     <AdminShell title="Overview">

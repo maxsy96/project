@@ -5,10 +5,13 @@
 [build.environment]
   NODE_VERSION = "22"
   PNPM_FLAGS = "--shamefully-hoist"
-  DATABASE_URL = "file:./prisma/dev.db"
+  DATABASE_URL = "file:./dev.db"
 
 [functions]
   included_files = ["prisma/dev.db"]
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[[plugins]]
+  package = "./netlify-plugins/skip-deploy-blobs"

@@ -10,7 +10,7 @@ export default function AdminLoginPage() {
       <PageHero
         eyebrow="Admin"
         title="Protected CAVM Club workspace."
-        description="Use the admin credentials from environment variables to manage opportunities, students, events, achievements, media, members, alumni, partner submissions, and contact messages."
+        description="Sign in to manage opportunities, students, events, achievements, media, members, alumni, partner submissions, and contact messages."
       />
       <section className="px-5 py-14 md:px-8">
         <AdminLoginForm />

@@ -55,10 +55,10 @@ const chapters = [
 ];
 
 const pillars = [
-  ["Fair access", "Opportunities should not depend on who already knows where to look."],
-  ["Public memory", "Photos, PDFs, timelines, and event records preserve the work for future committees."],
-  ["External trust", "Partners can see the club's history before offering visits, roles, or collaborations."],
-  ["Student growth", "More students can find a pathway into field learning, volunteering, research, and representation."],
+  ["Fair Access", "Opportunities should be visible to everyone, not only to those who already know where to look."],
+  ["Public Memory", "Photos, PDFs, timelines, and event records preserve the club's work and make it easier for future committees to build on."],
+  ["External Trust", "A clear record of the club's activities helps partners understand its value before offering visits, roles, or collaborations."],
+  ["Student Growth", "More students can find pathways into field learning, volunteering, research, leadership, and representation."],
 ];
 
 export default function HistoryPage() {
@@ -75,9 +75,9 @@ export default function HistoryPage() {
             ["260", "archived photos"],
             ["2024-2026", "documented timeline"],
           ].map(([value, label]) => (
-            <div key={label} className="rounded-md bg-white/10 p-3">
-              <p className="text-2xl font-semibold">{value}</p>
-              <p className="mt-1 text-xs uppercase text-slate-300">{label}</p>
+            <div key={label} className="rounded-md bg-emerald-400/15 p-3 ring-1 ring-emerald-300/25">
+              <p className="text-2xl font-semibold text-emerald-100">{value}</p>
+              <p className="mt-1 text-xs uppercase text-emerald-200/90">{label}</p>
             </div>
           ))}
         </div>
@@ -86,8 +86,8 @@ export default function HistoryPage() {
       <section className="mx-auto max-w-7xl px-5 py-14 md:px-8">
         <SectionHeader
           eyebrow="Narrative"
-          title="A richer timeline, built from the club PDFs and achievement article"
-          description="Instead of a short list of dates, this history shows how the club's work developed across service, sustainability, food security, veterinary relevance, agriculture, research, and public representation."
+          title="A richer timeline shaped by the club's records and achievements"
+          description="This timeline highlights the club's growth and impact across service, sustainability, food security, veterinary relevance, agriculture, research, and public representation."
         />
         <div className="mt-10 grid gap-6">
           {chapters.map((chapter, index) => (
@@ -116,7 +116,7 @@ export default function HistoryPage() {
           <SectionHeader
             eyebrow="Why the hub matters"
             title="The website turns club history into an access system"
-            description="The public presence is not only for display. It helps future students, alumni, faculty, and external partners understand what CAVM Club has done and where new opportunities can be shared."
+            description="The hub is more than a public display. It helps current students, alumni, faculty, and external partners understand the club's impact, explore past achievements, and discover where new opportunities can grow."
           />
           <div className="mt-8 grid gap-4 md:grid-cols-4">
             {pillars.map(([title, text]) => (

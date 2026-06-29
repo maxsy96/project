@@ -9,6 +9,43 @@ import { OpportunityCard } from "@/components/cards";
 
 export const dynamic = "force-dynamic";
 
+function splitDetailItems(value: string) {
+  return value
+    .split(/\n|;|,(?=\s)/)
+    .map((item) => item.trim().replace(/^and\s+/i, ""))
+    .filter(Boolean);
+}
+
+function DetailList({ value }: { value: string }) {
+  const items = splitDetailItems(value);
+  if (items.length <= 1) {
+    return <p className="mt-3 leading-7 text-slate-600">{value}</p>;
+  }
+
+  return (
+    <ul className="mt-3 grid gap-2 text-slate-600">
+      {items.map((item) => (
+        <li key={item} className="flex gap-2 leading-7">
+          <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600" aria-hidden="true" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function opportunityDurationLabel(type: string, title: string, description: string) {
+  const text = `${type} ${title} ${description}`.toLowerCase();
+  if (text.includes("four-week") || text.includes("4-week")) return "4 weeks";
+  if (type === "Farm Visit") return "Half-day to full-day visit";
+  if (type === "Training Program") return "Workshop duration shared after registration";
+  if (type === "Volunteering") return "Shift-based activity; timing confirmed after registration";
+  if (type === "Competition") return "Submission period plus presentation date";
+  if (type === "Research Assistant Role") return "Project-based placement";
+  if (type === "Program Abroad") return "Program schedule shared with shortlisted students";
+  return "Duration confirmed after registration";
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const opportunity = await prisma.opportunity.findUnique({ where: { slug } });
@@ -52,14 +89,15 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             </section>
             <section>
               <h2 className="text-xl font-semibold text-slate-950">Requirements</h2>
-              <p className="mt-3 leading-7 text-slate-600">{opportunity.requirements || opportunity.eligibility}</p>
+              <DetailList value={opportunity.requirements || opportunity.eligibility} />
             </section>
             <section>
               <h2 className="text-xl font-semibold text-slate-950">Benefits</h2>
-              <p className="mt-3 leading-7 text-slate-600">{opportunity.benefits}</p>
+              <DetailList value={opportunity.benefits} />
             </section>
             <dl className="grid gap-4 rounded-lg bg-slate-50 p-5 sm:grid-cols-2">
               <div><dt className="text-sm font-semibold text-slate-500">Deadline</dt><dd className="mt-1 font-medium">{formatDate(opportunity.deadline)}</dd></div>
+              <div><dt className="text-sm font-semibold text-slate-500">Expected duration</dt><dd className="mt-1 font-medium">{opportunityDurationLabel(opportunity.type, opportunity.title, opportunity.description)}</dd></div>
               <div><dt className="text-sm font-semibold text-slate-500">Paid/funding</dt><dd className="mt-1 font-medium">{opportunity.paidStatus}</dd></div>
               <div><dt className="text-sm font-semibold text-slate-500">Contact</dt><dd className="mt-1 font-medium">{opportunity.contactEmail || "CAVM Club"}</dd></div>
               <div><dt className="text-sm font-semibold text-slate-500">Source</dt><dd className="mt-1 font-medium">{opportunity.source}</dd></div>

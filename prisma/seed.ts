@@ -187,7 +187,7 @@ const opportunities: OpportunitySeed[] = [
     contactEmail: clubEmail,
     status: "open",
     source: "CAVM achievement archive",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-020.jpg",
+    imageUrl: "/images/home-submitted/food-science-booth.jpeg",
   },
   {
     title: "Wheat Breeding and Genetic Improvement Training",
@@ -286,7 +286,7 @@ const opportunities: OpportunitySeed[] = [
     contactEmail: clubEmail,
     status: "open",
     source: "CAVM events timeline",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-020.jpg",
+    imageUrl: "/images/home-submitted/food-science-ai-talk.jpeg",
   },
 ];
 
@@ -410,7 +410,7 @@ const events: EventSeed[] = [
     location: "UAEU",
     category: "Workshop",
     status: "completed",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-006.jpg",
+    imageUrl: "/images/home-submitted/community-planting-workshop-01.jpeg",
     description:
       "A pot-planting summer workshop with the College of Education promoting practical agricultural skills and sustainability awareness among school students.",
   },
@@ -421,7 +421,7 @@ const events: EventSeed[] = [
     location: "UAEU",
     category: "Conference",
     status: "completed",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-020.jpg",
+    imageUrl: "/images/home-submitted/sustainability-forum-team.jpeg",
     description:
       "A student-organized debate encouraging school students to discuss sustainability, global challenges, and youth responsibility.",
   },
@@ -432,9 +432,97 @@ const events: EventSeed[] = [
     location: "CAVM",
     category: "Leadership",
     status: "completed",
-    imageUrl: "/images/archive/al-foah-gathering-2025/al-foah-gathering-2025-024.jpg",
+    imageUrl: "/images/archive/cavm-week-2026/cavm-week-2026-01.jpeg",
     description:
       "Club members supported the organization, management, and stage performances for a major agriculture, food science, and veterinary medicine festival.",
+  },
+  {
+    title: "Walaw Bishaq Tamrah Giving Initiative",
+    date: "2026-01-15",
+    time: "10:00 AM",
+    location: "UAEU",
+    category: "Community",
+    status: "completed",
+    imageUrl: "/images/archive/walaw-bishaq-tamrah-giving-initiative-2026/walaw-bishaq-tamrah-giving-initiative-2026-01.jpeg",
+    description:
+      "A CAVM Club giving initiative organized with Emirates Red Crescent and UAEU administration, promoting charity, date-palm culture, and student responsibility.",
+  },
+  {
+    title: "Sun Yat-sen University Student Delegation Hosting",
+    date: "2026-01-29",
+    time: "9:00 AM",
+    location: "UAEU",
+    category: "International",
+    status: "completed",
+    imageUrl: "/images/archive/uaeu-china-delegation-2026/uaeu-china-delegation-2026-01.jpeg",
+    description:
+      "CAVM Club hosted a student delegation from Sun Yat-sen University, supporting cultural exchange and coordinated student engagement at UAEU.",
+  },
+  {
+    title: "Youth in Sustainability Dialogue Session",
+    date: "2026-02-12",
+    time: "10:00 AM",
+    location: "CAVM",
+    category: "Conference",
+    status: "completed",
+    imageUrl: "/images/archive/youth-sustainability-dialogue-2026/youth-sustainability-dialogue-2026-09.jpeg",
+    description:
+      "A dialogue session during the CAVM festival program highlighting the role of youth in sustainability, environmental responsibility, food systems, and student leadership.",
+  },
+  {
+    title: "UAE Agricultural Conference and Sector Exhibition 2026",
+    date: "2026-04-22",
+    time: "9:00 AM",
+    location: "UAE Agricultural Conference and Sector Exhibition",
+    category: "Conference",
+    status: "completed",
+    imageUrl: "/images/archive/agriculture-conference-exhibition-2026/agriculture-conference-exhibition-2026-09.jpeg",
+    description:
+      "CAVM Club represented student involvement in a national agricultural platform focused on innovation, sustainability, food security, product displays, and public engagement.",
+  },
+  {
+    title: "CAVM Delegation Visit to China",
+    date: "2026-05-25",
+    time: "9:00 AM",
+    location: "China",
+    category: "International",
+    status: "completed",
+    imageUrl: "/images/archive/china-cavm-delegation-visit-2026/china-cavm-delegation-visit-2026-01.jpeg",
+    description:
+      "CAVM students and representatives joined an academic and cultural visit to China, documenting international exchange, institutional visits, and student representation.",
+  },
+  {
+    title: "UAEU Chancellor's Visit to Al Foah Research Farm",
+    date: "2026-06-08",
+    time: "9:00 AM",
+    location: "Al Foah Research Farm",
+    category: "Leadership",
+    status: "completed",
+    imageUrl: "/images/archive/uaeu-chancellor-visit-2026/uaeu-chancellor-visit-2026-07.jpeg",
+    description:
+      "CAVM Club supported college representation during the UAEU Chancellor's visit to Al Foah Research Farm through project presentations, lab engagement, and student participation.",
+  },
+  {
+    title: "Student Clubs Forum 2025",
+    date: "2025-02-24",
+    time: "9:00 AM",
+    location: "UAEU",
+    category: "Leadership",
+    status: "completed",
+    imageUrl: "/images/archive/student-clubs-forum-2025/student-clubs-forum-2025-01.jpeg",
+    description:
+      "CAVM Club joined the Student Clubs Forum to present initiatives, exchange ideas with other university clubs, and expand student-led collaboration.",
+  },
+  {
+    title: "UAE National Day CAVM Booth and Workshops",
+    date: "2025-11-18",
+    time: "10:00 AM",
+    location: "CAVM",
+    category: "Culture",
+    status: "completed",
+    imageUrl: "/images/archive/uae-national-day-cavm-booth-2025/uae-national-day-cavm-booth-2025-01.jpeg",
+    description:
+      "CAVM Club prepared the National Day booth and organized cultural workshops, traditional activities, and student-led public engagement.",
   },
 ];
 
@@ -444,7 +532,7 @@ const achievements: AchievementSeed[] = [
     category: "Community impact",
     year: 2025,
     date: "2025-10-05",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-006.jpg",
+    imageUrl: "/images/archive/cavm-week-2026/cavm-week-2026-02.jpeg",
     description: "Organized an appreciation initiative recognizing faculty members and strengthening the relationship between students and academic staff.",
   },
   {
@@ -452,9 +540,10 @@ const achievements: AchievementSeed[] = [
     category: "Community impact",
     year: 2026,
     date: "2026-01-15",
-    imageUrl: "/images/archive/al-foah-gathering-2025/al-foah-gathering-2025-012.jpg",
+    imageUrl: "/images/archive/walaw-bishaq-tamrah-giving-initiative-2026/walaw-bishaq-tamrah-giving-initiative-2026-01.jpeg",
     description:
       "Concluded the community initiative in collaboration with the Emirates Red Crescent and UAEU administration, promoting giving, charity, and student responsibility.",
+    externalUrl: "/media#walaw-bishaq-tamrah-giving-initiative-2026",
   },
   {
     title: "AAIHEX Al Ain Exhibition Representation",
@@ -470,7 +559,7 @@ const achievements: AchievementSeed[] = [
     category: "Research",
     year: 2025,
     date: "2025-10-21",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-020.jpg",
+    imageUrl: "/images/home-submitted/food-science-booth.jpeg",
     description:
       "Participated in food-security and sustainability conversations at ADNEC, including student research and expert engagement around future food systems.",
   },
@@ -479,16 +568,27 @@ const achievements: AchievementSeed[] = [
     category: "Partnerships",
     year: 2026,
     date: "2026-01-29",
-    imageUrl: "/images/archive/al-foah-gathering-2025/al-foah-gathering-2025-012.jpg",
+    imageUrl: "/images/archive/uaeu-china-delegation-2026/uaeu-china-delegation-2026-01.jpeg",
     description:
       "Hosted a student delegation from Sun Yat-sen University, China, supporting cultural exchange through coordinated activities in Al Ain and Dubai.",
+    externalUrl: "/media#uaeu-china-delegation-2026",
+  },
+  {
+    title: "CAVM Delegation Visit to China",
+    category: "Partnerships",
+    year: 2026,
+    date: "2026-05-25",
+    imageUrl: "/images/archive/china-cavm-delegation-visit-2026/china-cavm-delegation-visit-2026-01.jpeg",
+    description:
+      "Represented CAVM and UAEU through an academic and cultural delegation visit to China, strengthening international exchange, professional exposure, and student confidence.",
+    externalUrl: "/media#china-cavm-delegation-visit-2026",
   },
   {
     title: "Second Sustainability Forum",
     category: "Events",
     year: 2026,
     date: "2026-02-01",
-    imageUrl: "/images/archive/future-plus-2025/future-plus-2025-050.jpg",
+    imageUrl: "/images/home-submitted/sustainability-forum-team.jpeg",
     description:
       "Participated in a national sustainability platform in partnership with the motherhood and childhood sector, focused on innovation, sustainability, and food security.",
   },
@@ -507,16 +607,17 @@ const achievements: AchievementSeed[] = [
     category: "Events",
     year: 2025,
     date: "2025-02-24",
-    imageUrl: "/images/archive/official-exhibition-visit/official-exhibition-visit-001.jpg",
+    imageUrl: "/images/archive/student-clubs-forum-2025/student-clubs-forum-2025-01.jpeg",
     description:
       "Joined the Student Club Forum to exchange ideas with other university clubs, present initiatives, and expand student-led collaboration.",
+    externalUrl: "/media#student-clubs-forum-2025",
   },
   {
     title: "Youth in Sustainability Dialogue Session",
     category: "Events",
     year: 2026,
     date: "2026-02-12",
-    imageUrl: "/images/archive/future-plus-2025/future-plus-2025-050.jpg",
+    imageUrl: "/images/archive/youth-sustainability-dialogue-2026/youth-sustainability-dialogue-2026-09.jpeg",
     description:
       "Organized a dialogue session during the CAVM festival on the role and importance of youth in sustainability and environmental responsibility.",
   },
@@ -525,16 +626,17 @@ const achievements: AchievementSeed[] = [
     category: "Events",
     year: 2026,
     date: "2026-02-10",
-    imageUrl: "/images/archive/al-foah-gathering-2025/al-foah-gathering-2025-024.jpg",
+    imageUrl: "/images/archive/cavm-week-2026/cavm-week-2026-04.jpeg",
     description:
       "Participated in the organization and management of the overall festival and stage performances, supporting student engagement across CAVM disciplines.",
+    externalUrl: "/media#cavm-week-2026",
   },
   {
     title: "A Day for Earth Pot-Planting Workshop",
     category: "Community impact",
     year: 2025,
     date: "2025-06-07",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-006.jpg",
+    imageUrl: "/images/home-submitted/community-planting-workshop-01.jpeg",
     description:
       "Conducted a summer pot-planting workshop with the College of Education, promoting practical agriculture and sustainability awareness among school students.",
   },
@@ -543,7 +645,7 @@ const achievements: AchievementSeed[] = [
     category: "Partnerships",
     year: 2025,
     date: "2025-05-28",
-    imageUrl: "/images/archive/official-exhibition-visit/official-exhibition-visit-001.jpg",
+    imageUrl: "/images/home-submitted/agriculture-conference-team.jpeg",
     description:
       "Participated in the 2025 agricultural conference and exhibition, strengthening student exposure to agricultural technologies and industry connections.",
   },
@@ -552,7 +654,7 @@ const achievements: AchievementSeed[] = [
     category: "Partnerships",
     year: 2026,
     date: "2026-04-22",
-    imageUrl: "/images/archive/future-plus-2025/future-plus-2025-050.jpg",
+    imageUrl: "/images/archive/agriculture-conference-exhibition-2026/agriculture-conference-exhibition-2026-09.jpeg",
     description:
       "Represented student involvement in a national agricultural platform focused on innovation, sustainability, and food security.",
   },
@@ -580,7 +682,7 @@ const achievements: AchievementSeed[] = [
     category: "Events",
     year: 2026,
     date: "2026-02-02",
-    imageUrl: "/images/archive/al-foah-gathering-2025/al-foah-gathering-2025-012.jpg",
+    imageUrl: "/images/home-submitted/community-planting-workshop-02.jpeg",
     description:
       "Participated in a plant-focused event promoting agriculture, sustainability, environmental awareness, and green initiatives.",
   },
@@ -589,7 +691,7 @@ const achievements: AchievementSeed[] = [
     category: "Community impact",
     year: 2025,
     date: "2025-06-16",
-    imageUrl: "/images/archive/official-exhibition-visit/official-exhibition-visit-001.jpg",
+    imageUrl: "/images/home-submitted/community-planting-workshop-01.jpeg",
     description:
       "Celebrated environmental stewardship through educational activities connected to sustainability and student awareness.",
   },
@@ -598,7 +700,7 @@ const achievements: AchievementSeed[] = [
     category: "Community impact",
     year: 2025,
     date: "2025-04-24",
-    imageUrl: "/images/archive/official-exhibition-visit/official-exhibition-visit-001.jpg",
+    imageUrl: "/images/home-submitted/sustainability-forum-team.jpeg",
     description:
       "Raised awareness about recycling, waste reduction, and proper segregation through campus sustainability engagement.",
   },
@@ -607,7 +709,7 @@ const achievements: AchievementSeed[] = [
     category: "Events",
     year: 2025,
     date: "2025-11-05",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-020.jpg",
+    imageUrl: "/images/home-submitted/food-science-ai-talk.jpeg",
     description:
       "Hosted a talk at Abu Dhabi University on food-waste reduction and transforming food waste into environmental and social value.",
   },
@@ -616,7 +718,7 @@ const achievements: AchievementSeed[] = [
     category: "Media recognition",
     year: 2025,
     date: "2025-08-30",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-006.jpg",
+    imageUrl: "/images/archive/official-exhibition-visit/official-exhibition-visit-003.jpg",
     description:
       "Participated in one of Abu Dhabi's major cultural and heritage exhibitions, supporting CAVM representation in heritage, animals, sustainability, and community engagement.",
   },
@@ -625,7 +727,7 @@ const achievements: AchievementSeed[] = [
     category: "Research",
     year: 2025,
     date: "2025-10-21",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-020.jpg",
+    imageUrl: "/images/home-submitted/food-science-booth.jpeg",
     description:
       "Engaged experts and stakeholders in food security, sustainability, and agricultural innovation during ADIFE 2025 / Global Food Week.",
   },
@@ -644,7 +746,7 @@ const achievements: AchievementSeed[] = [
     category: "Competitions",
     year: 2025,
     date: "2025-11-11",
-    imageUrl: "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-020.jpg",
+    imageUrl: "/images/home-submitted/sustainability-forum-team.jpeg",
     description:
       "Organized a debate focused on the Sustainable Development Goals, encouraging school students to discuss sustainability, global challenges, and youth responsibility.",
   },
@@ -662,7 +764,7 @@ const achievements: AchievementSeed[] = [
     category: "Events",
     year: 2026,
     date: "2026-02-01",
-    imageUrl: "/images/archive/al-foah-gathering-2025/al-foah-gathering-2025-012.jpg",
+    imageUrl: "/images/archive/cavm-week-2026/cavm-week-2026-05.jpeg",
     description:
       "Welcomed new students, introduced CAVM programs, and promoted student involvement, leadership opportunities, and club engagement.",
   },
@@ -671,7 +773,7 @@ const achievements: AchievementSeed[] = [
     category: "Partnerships",
     year: 2026,
     date: "2026-06-08",
-    imageUrl: "/images/archive/future-plus-2025/future-plus-2025-096.jpg",
+    imageUrl: "/images/archive/uaeu-chancellor-visit-2026/uaeu-chancellor-visit-2026-07.jpeg",
     description:
       "Supported CAVM representation during the UAEU Chancellor's visit to the research farm station at Al Foah Farm.",
   },
@@ -680,7 +782,7 @@ const achievements: AchievementSeed[] = [
     category: "Research",
     year: 2026,
     date: "2026-06-08",
-    imageUrl: "/images/archive/future-plus-2025/future-plus-2025-096.jpg",
+    imageUrl: "/images/home-submitted/date-palm-student-team.jpeg",
     description:
       "Presented date palm research and products with the General Secretariat of the Khalifa International Award for Date Palm and Agricultural Innovation.",
   },
@@ -689,7 +791,7 @@ const achievements: AchievementSeed[] = [
     category: "Research",
     year: 2026,
     date: "2026-04-28",
-    imageUrl: "/images/archive/future-plus-2025/future-plus-2025-050.jpg",
+    imageUrl: "/images/home-submitted/date-palm-student-team.jpeg",
     description:
       "Participated in a date-palm-focused conference highlighting agricultural innovation, research, production, sustainability, and food security.",
   },
@@ -707,7 +809,7 @@ const achievements: AchievementSeed[] = [
     category: "Partnerships",
     year: 2026,
     date: "2026-02-11",
-    imageUrl: "/images/archive/al-foah-gathering-2025/al-foah-gathering-2025-024.jpg",
+    imageUrl: "/images/home-submitted/date-harvest-team.jpeg",
     description:
       "Participated in a visit to Dana Al Ain Farm and Nursery with the UAEU Chancellor, highlighting student engagement in agricultural field visits.",
   },
@@ -716,7 +818,7 @@ const achievements: AchievementSeed[] = [
     category: "Research",
     year: 2026,
     date: "2026-02-04",
-    imageUrl: "/images/archive/al-foah-gathering-2025/al-foah-gathering-2025-024.jpg",
+    imageUrl: "/images/home-submitted/al-foah-field-visit-group.jpeg",
     description:
       "Participated in a program with Sharjah agriculture entities and Ektifa focused on wheat breeding, genetic improvement, agricultural development, and food security.",
   },
@@ -725,22 +827,27 @@ const achievements: AchievementSeed[] = [
     category: "Community impact",
     year: 2025,
     date: "2025-11-18",
-    imageUrl: "/images/archive/official-exhibition-visit/official-exhibition-visit-003.jpg",
+    imageUrl: "/images/archive/uae-national-day-cavm-booth-2025/uae-national-day-cavm-booth-2025-01.jpeg",
     description:
       "Prepared and decorated the CAVM booth for UAE National Day and organized workshops including dukhoon making, Talli bracelets, traditional dolls, face painting, henna, and a photo corner.",
+    externalUrl: "/media#uae-national-day-cavm-booth-2025",
   },
   {
     title: "Date Palm Conference Research Project Display",
     category: "Research",
     year: 2026,
     date: "2026-04-28",
-    imageUrl: "/images/archive/future-plus-2025/future-plus-2025-050.jpg",
+    imageUrl: "/images/home-submitted/date-palm-student-team.jpeg",
     description:
       "Displayed student date-palm research projects at the eighth international date palm conference in Abu Dhabi.",
   },
 ];
 
 const media: Array<[string, string, string, string, string, string]> = [
+  ["UAEU Chancellor Visit 2026 Photo Archive", "Partnerships", "Photos", "/images/archive/uaeu-chancellor-visit-2026/uaeu-chancellor-visit-2026-07.jpeg", "Supplied photo album from the UAEU Chancellor's visit to Al Foah Research Farm.", "2026-06-08"],
+  ["UAE Agricultural Conference and Sector Exhibition 2026 Photo Archive", "Partnerships", "Photos", "/images/archive/agriculture-conference-exhibition-2026/agriculture-conference-exhibition-2026-09.jpeg", "Supplied photo album from the UAE Agricultural Conference and Sector Exhibition 2026.", "2026-04-22"],
+  ["Youth in Sustainability Dialogue Photo Archive", "Events", "Photos", "/images/archive/youth-sustainability-dialogue-2026/youth-sustainability-dialogue-2026-09.jpeg", "Supplied photo album from the Youth in Sustainability Dialogue session.", "2026-02-12"],
+  ["CAVM Week Festival Photo Archive", "Events", "Photos", "/images/archive/cavm-week-2026/cavm-week-2026-01.jpeg", "Supplied CAVM Week festival album documenting student engagement, organization, booths, and event moments.", "2026-02-10"],
   ["Liwa Date Festival Photo Archive", "Culture", "Photos", "/images/archive/liwa-date-festival-2025/liwa-date-festival-2025-001.jpg", "Complete supplied photo archive from the Liwa Date Festival booth and recognition moments.", "2025-07-14"],
   ["Al Foah Farm Gathering Photo Archive", "Community", "Photos", "/images/archive/al-foah-gathering-2025/al-foah-gathering-2025-001.jpg", "Complete supplied Gatherings Cavm album from the Al Foah student farm gathering.", "2025-11-19"],
   ["Future+ Photo Archive", "International", "Photos", "/images/archive/future-plus-2025/future-plus-2025-001.jpg", "Complete supplied Future+ international exchange album.", "2025-11-01"],

@@ -6,17 +6,28 @@ import crypto from "node:crypto";
 
 const cookieName = "cavm_admin_session";
 
+export function adminUsername() {
+  const configuredUsername = process.env.ADMIN_USERNAME || process.env.ADMIN_EMAIL;
+  if (configuredUsername) return configuredUsername;
+  return process.env.NODE_ENV === "production" ? "" : "CAVM_ADMIN";
+}
+
+export function adminPassword() {
+  if (process.env.ADMIN_PASSWORD) return process.env.ADMIN_PASSWORD;
+  return process.env.NODE_ENV === "production" ? "" : "CAVM_ADMIN";
+}
+
 function authSecret() {
-  return process.env.AUTH_SECRET || process.env.ADMIN_PASSWORD || "cavm-local-dev-secret";
+  return process.env.AUTH_SECRET || adminPassword() || "cavm-local-dev-secret";
 }
 
-function sign(email: string, timestamp: string) {
-  return crypto.createHmac("sha256", authSecret()).update(`${email}:${timestamp}`).digest("hex");
+function sign(username: string, timestamp: string) {
+  return crypto.createHmac("sha256", authSecret()).update(`${username}:${timestamp}`).digest("hex");
 }
 
-export async function createAdminSession(email: string) {
+export async function createAdminSession(username: string) {
   const timestamp = Date.now().toString();
-  const token = `${email}:${timestamp}:${sign(email, timestamp)}`;
+  const token = `${username}:${timestamp}:${sign(username, timestamp)}`;
   const cookieStore = await cookies();
   cookieStore.set(cookieName, token, {
     httpOnly: true,
@@ -36,12 +47,12 @@ export async function isAdmin() {
   const cookieStore = await cookies();
   const token = cookieStore.get(cookieName)?.value;
   if (!token) return false;
-  const [email, timestamp, signature] = token.split(":");
-  if (!email || !timestamp || !signature) return false;
-  if (email !== process.env.ADMIN_EMAIL) return false;
+  const [username, timestamp, signature] = token.split(":");
+  if (!username || !timestamp || !signature) return false;
+  if (username !== adminUsername()) return false;
   const age = Date.now() - Number(timestamp);
   if (!Number.isFinite(age) || age > 1000 * 60 * 60 * 8) return false;
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(sign(email, timestamp)));
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(sign(username, timestamp)));
 }
 
 export async function requireAdmin() {

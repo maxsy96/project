@@ -1,6 +1,7 @@
 import { createAchievementAction, deleteAchievementAction } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getStoredAchievements, storedAchievementToView } from "@/lib/admin-content-store";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminTable, AdminTd, AdminTh } from "@/components/admin-table";
 import { SimpleContentForm } from "@/components/admin-forms";
@@ -9,7 +10,15 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminAchievementsPage() {
   await requireAdmin();
-  const achievements = await prisma.achievement.findMany({ orderBy: [{ year: "desc" }, { createdAt: "desc" }] });
+  const [databaseAchievements, storedAchievements] = await Promise.all([
+    prisma.achievement.findMany({ orderBy: [{ year: "desc" }, { createdAt: "desc" }] }),
+    getStoredAchievements(),
+  ]);
+  const achievements = [
+    ...storedAchievements.map(storedAchievementToView),
+    ...databaseAchievements,
+  ].sort((a, b) => b.year - a.year || b.createdAt.getTime() - a.createdAt.getTime());
+
   return (
     <AdminShell title="Achievements Management">
       <div className="grid gap-6">

@@ -1,16 +1,31 @@
-# CAVM Club Website + CAVM Opportunity Hub
+# CAVM Club Website + Opportunity Hub
 
-A polished official website for CAVM Club with a centralized Opportunity Hub for internships, volunteering, research roles, farm visits, jobs, training programs, scholarships, competitions, conferences, government opportunities, and programs abroad.
+Official website and Opportunity Hub for the CAVM Club at UAEU. The application gives the club a public presence beyond social media and provides one organized platform for student opportunities, activities, achievements, members, alumni, media archives, partner submissions, and visitor forms.
 
-## Features
+Live site: <https://cavm-opportunity-hub-uaeu-2026.netlify.app>
 
-- Public pages for Home, About, History, Achievements, Events, Media, Members, Alumni, Opportunity Hub, Partners, Official Links, and Contact.
-- Searchable and filterable opportunity directory with detail pages.
-- Student interest registration with private data storage and matching preview.
-- Partner opportunity submission workflow with pending review.
-- Protected admin area for opportunities, student registrations, events, achievements, media, members, alumni, partner submissions, and contact messages.
+## What This Application Includes
+
+- Public website pages for Home, About, History, Alumni & Achievements, Events, Media, Members, Opportunity Hub, Partners, Contact & Links.
+- Searchable and filterable Opportunity Hub for internships, volunteering, research assistant roles, farm visits, jobs, training programs, scholarships, competitions, conferences, government opportunities, and programs abroad.
+- Student interest registration with sector matching for veterinary medicine, agriculture, food science, environment, research, and government pathways.
+- Partner submission workflow for external organizations offering student opportunities.
+- Event pages with upcoming, closing soon, closed, completed, and cancelled states.
+- Event registration forms that send details to the admin contact submissions area.
+- Protected admin dashboard for opportunities, students, partner submissions, contact messages, events, achievements, media, members, and alumni.
 - CSV export for student interest registrations.
-- Seeded CAVM-relevant content from the provided PDFs, document, and image archives.
+- CAVM photo archive and event albums from the provided media folders.
+- Email notification support for forms through Resend.
+- Netlify deployment configuration for a dynamic Next.js app.
+
+## Operating Guide
+
+The full operating guide is included in this repository:
+
+- [Markdown guide](docs/OPERATING_GUIDE.md)
+- [PowerPoint guide](docs/CAVM-Website-Operating-Guide.pptx)
+
+The guide explains admin login, where visitor forms go, event updates, opportunity review, contact messages, email notifications, deployment, and the admin checklist.
 
 ## Tech Stack
 
@@ -18,7 +33,9 @@ A polished official website for CAVM Club with a centralized Opportunity Hub for
 - TypeScript
 - Tailwind CSS
 - Prisma ORM
-- SQLite for local development through `DATABASE_URL`
+- SQLite for local development and seeded launch data
+- Netlify server functions
+- Netlify Blobs for admin-added events and achievements
 - Zod validation
 - lucide-react icons
 
@@ -33,64 +50,109 @@ pnpm db:seed
 pnpm dev
 ```
 
-Open `http://localhost:3000`.
+Open:
 
-The app in this workspace already has a local SQLite database at `prisma/dev.db` seeded for preview.
+```text
+http://localhost:3000
+```
 
 ## Environment Variables
 
+Copy `.env.example` to `.env` for local development.
+
 ```bash
 DATABASE_URL="file:./dev.db"
-ADMIN_EMAIL="admin@cavm.local"
-ADMIN_PASSWORD="replace-with-a-strong-password"
-AUTH_SECRET="replace-with-a-long-random-string"
+ADMIN_USERNAME="replace-with-admin-username"
+ADMIN_PASSWORD="replace-with-strong-admin-password"
+AUTH_SECRET="replace-with-a-long-random-string-at-least-32-characters"
+RESEND_API_KEY=""
+NOTIFICATION_FROM_EMAIL="CAVM Club <onboarding@resend.dev>"
+CLUB_NOTIFICATION_EMAIL="Clubcavm@gmail.com"
 ```
 
-Optional SMTP variables are included in `.env.example` for future notification delivery. The MVP does not require real email sending.
+Production admin credentials must be configured in Netlify. The app does not rely on public production fallback credentials.
 
-## Admin Login
+## Admin Dashboard
 
-Visit `/admin/login` and use the values in `.env`:
+Admin login route:
 
-- Email: `ADMIN_EMAIL`
-- Password: `ADMIN_PASSWORD`
+```text
+/admin/login
+```
 
-Never expose these values in client code or public documentation for a real deployment.
+Main admin areas:
+
+- `/admin/students`
+- `/admin/contact-submissions`
+- `/admin/partner-submissions`
+- `/admin/opportunities`
+- `/admin/events`
+- `/admin/achievements`
+- `/admin/media`
+- `/admin/members`
+- `/admin/alumni`
+
+## Form Submission Routing
+
+| Visitor action | Admin destination |
+| --- | --- |
+| Register Interest | `/admin/students` |
+| Contact form | `/admin/contact-submissions` |
+| Opportunity interest | `/admin/contact-submissions` |
+| Event registration | `/admin/contact-submissions` |
+| Partner With Us | `/admin/partner-submissions` |
+
+If `RESEND_API_KEY` is configured, these forms also email `Clubcavm@gmail.com`.
 
 ## Database Commands
 
 ```bash
-pnpm db:generate   # Generate Prisma Client
-pnpm db:push       # Sync SQLite schema locally
-pnpm db:seed       # Load sample CAVM data
-pnpm db:studio     # Open Prisma Studio
+pnpm db:generate
+pnpm db:push
+pnpm db:seed
+pnpm db:studio
 ```
 
-To move from SQLite to PostgreSQL later, update `DATABASE_URL`, change the Prisma datasource provider, review scalar compatibility, then run a proper migration.
+## Production Storage Note
 
-## Matching System
+This is a real dynamic application, not a static demo. It includes protected admin pages, server actions, form handling, email notifications, Prisma models, and Netlify deployment support.
 
-A student matches an opportunity when at least one selected student sector overlaps with the opportunity sector tags. Match strength increases when the student's preferred opportunity types also include the opportunity type:
+For long-term production records, connect Prisma to a hosted production database such as Netlify DB, Neon, Supabase, or another PostgreSQL provider. SQLite is appropriate for local development and seeded launch content, but a hosted database is recommended for durable student registrations, partner submissions, contact messages, opportunity updates, members, alumni, and media records.
 
-- Strong match: sector overlap and type preference match.
-- Good match: sector overlap only.
-- Possible match: type preference match only.
+Admin-added events and achievements already use Netlify Blobs on Netlify.
 
-Matching appears after student registration and inside admin student/opportunity workflows.
+## Netlify Deployment
 
-## Adding Content
+Use the included `netlify.toml`.
 
-- Add or edit opportunities from `/admin/opportunities`.
-- Partner submissions are reviewed at `/admin/partner-submissions` and can be approved into public opportunities.
-- Manage events, achievements, media, members, and alumni from their admin pages.
-- Keep public member/alumni photos consent-approved.
+Build command:
 
-## Assumptions
+```bash
+pnpm run db:touch && pnpm run db:generate && pnpm run db:push && pnpm run db:seed && pnpm run build
+```
 
-- Official social links, club email, and partner application URLs are placeholders until CAVM provides approved links.
-- Student data is private and only visible inside `/admin`.
-- The provided media archives are used as a curated, optimized web sample rather than importing all large originals.
-- Prisma is pinned to 6.x to keep the classic SQLite `DATABASE_URL` setup stable for the MVP.
+Publish directory:
+
+```text
+.next
+```
+
+Required Netlify environment variables:
+
+```text
+DATABASE_URL=file:./dev.db
+ADMIN_USERNAME=<admin username>
+ADMIN_PASSWORD=<strong admin password>
+AUTH_SECRET=<long random secret>
+CLUB_NOTIFICATION_EMAIL=Clubcavm@gmail.com
+```
+
+Recommended for email notifications:
+
+```text
+RESEND_API_KEY=<Resend API key>
+NOTIFICATION_FROM_EMAIL=<verified sender>
+```
 
 ## Validation
 
@@ -99,4 +161,4 @@ pnpm run lint
 pnpm run build
 ```
 
-Both checks pass in this workspace.
+Both commands should pass before deployment.
