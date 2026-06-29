@@ -3,9 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { formList, formString, slugify, toJsonList } from "@/lib/utils";
 import { queueNotification } from "@/lib/notifications";
+import {
+  createContactSubmission,
+  createPartnerSubmission,
+  createStudentInterest,
+  getAllOpportunities,
+} from "@/lib/runtime-store";
 
 export type ActionState = {
   ok: boolean;
@@ -92,16 +97,14 @@ export async function registerInterestAction(_state: ActionState, formData: Form
 
   if (!parsed.success) return validationState(parsed.error);
 
-  const student = await prisma.studentInterest.create({
-    data: {
-      ...parsed.data,
-      studentId: parsed.data.studentId || "",
-      phone: parsed.data.phone || "",
-      interests: toJsonList(parsed.data.interests),
-      opportunityPreferences: toJsonList(parsed.data.opportunityPreferences),
-      preferredLocations: toJsonList(parsed.data.preferredLocations),
-      consent: true,
-    },
+  const student = await createStudentInterest({
+    ...parsed.data,
+    studentId: parsed.data.studentId || "",
+    phone: parsed.data.phone || "",
+    interests: toJsonList(parsed.data.interests),
+    opportunityPreferences: toJsonList(parsed.data.opportunityPreferences),
+    preferredLocations: toJsonList(parsed.data.preferredLocations),
+    consent: true,
   });
 
   await queueNotification(
@@ -148,16 +151,14 @@ export async function partnerSubmissionAction(_state: ActionState, formData: For
 
   if (!parsed.success) return validationState(parsed.error);
 
-  await prisma.partnerSubmission.create({
-    data: {
-      ...parsed.data,
-      phone: parsed.data.phone || "",
-      notes: parsed.data.notes || "",
-      applicationUrl: parsed.data.applicationUrl || "",
-      sectors: toJsonList(parsed.data.sectors),
-      deadline: parsed.data.deadline ? new Date(parsed.data.deadline) : null,
-      approvalStatus: "pending",
-    },
+  await createPartnerSubmission({
+    ...parsed.data,
+    phone: parsed.data.phone || "",
+    notes: parsed.data.notes || "",
+    applicationUrl: parsed.data.applicationUrl || "",
+    sectors: toJsonList(parsed.data.sectors),
+    deadline: parsed.data.deadline ? new Date(parsed.data.deadline).toISOString() : null,
+    approvalStatus: "pending",
   });
 
   await queueNotification(
@@ -196,7 +197,7 @@ export async function contactAction(_state: ActionState, formData: FormData): Pr
 
   if (!parsed.success) return validationState(parsed.error);
 
-  await prisma.contactSubmission.create({ data: parsed.data });
+  await createContactSubmission(parsed.data);
   await queueNotification(
     "New CAVM website contact message",
     `${parsed.data.name}: ${parsed.data.subject}`,
@@ -218,13 +219,11 @@ export async function interestedAction(formData: FormData) {
   const email = formString(formData, "email");
   const message = formString(formData, "message") || `A student clicked interested for ${opportunityTitle}.`;
 
-  await prisma.contactSubmission.create({
-    data: {
-      name,
-      email,
-      subject: `Interested in ${opportunityTitle}`,
-      message,
-    },
+  await createContactSubmission({
+    name,
+    email,
+    subject: `Interested in ${opportunityTitle}`,
+    message,
   });
   await queueNotification(
     `New interest in ${opportunityTitle}`,
@@ -257,17 +256,15 @@ export async function eventRegistrationAction(formData: FormData) {
 
   const message = parsed.data.message || `Registration request for ${parsed.data.eventTitle}.`;
 
-  await prisma.contactSubmission.create({
-    data: {
-      name: parsed.data.name,
-      email: parsed.data.email,
-      subject: `Event registration: ${parsed.data.eventTitle}`,
-      message: [
-        message,
-        parsed.data.studentId ? `Student ID: ${parsed.data.studentId}` : "",
-        parsed.data.phone ? `Phone: ${parsed.data.phone}` : "",
-      ].filter(Boolean).join("\n"),
-    },
+  await createContactSubmission({
+    name: parsed.data.name,
+    email: parsed.data.email,
+    subject: `Event registration: ${parsed.data.eventTitle}`,
+    message: [
+      message,
+      parsed.data.studentId ? `Student ID: ${parsed.data.studentId}` : "",
+      parsed.data.phone ? `Phone: ${parsed.data.phone}` : "",
+    ].filter(Boolean).join("\n"),
   });
 
   await queueNotification(
@@ -291,7 +288,8 @@ export async function makeOpportunitySlug(title: string) {
   const base = slugify(title);
   let slug = base;
   let counter = 2;
-  while (await prisma.opportunity.findUnique({ where: { slug } })) {
+  const opportunities = await getAllOpportunities();
+  while (opportunities.some((opportunity) => opportunity.slug === slug)) {
     slug = `${base}-${counter}`;
     counter += 1;
   }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
+import { getAllOpportunities, getStudentInterestById } from "@/lib/runtime-store";
 import { fromJsonList, matchScore } from "@/lib/utils";
 import { OpportunityCard } from "@/components/cards";
 import { ButtonLink, PageHero, Pill } from "@/components/ui";
@@ -9,8 +9,10 @@ export const metadata: Metadata = { title: "Registration Success" };
 
 export default async function RegisterSuccessPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
   const { id } = await searchParams;
-  const student = id ? await prisma.studentInterest.findUnique({ where: { id: Number(id) } }) : null;
-  const opportunities = await prisma.opportunity.findMany({ where: { approvalStatus: "approved", status: { not: "closed" } }, orderBy: { deadline: "asc" } });
+  const student = id ? await getStudentInterestById(Number(id)) : null;
+  const opportunities = (await getAllOpportunities())
+    .filter((opportunity) => opportunity.approvalStatus === "approved" && opportunity.status !== "closed")
+    .sort((a, b) => (a.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER));
   const matches = student
     ? opportunities
         .map((opportunity) => ({

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
+import { getAllOpportunities } from "@/lib/runtime-store";
 import { PageHero } from "@/components/ui";
 import { OpportunityExplorer } from "@/components/opportunity-explorer";
 
@@ -7,10 +7,14 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Opportunity Hub" };
 
 export default async function OpportunitiesPage() {
-  const opportunities = await prisma.opportunity.findMany({
-    where: { approvalStatus: "approved" },
-    orderBy: [{ status: "asc" }, { deadline: "asc" }],
-  });
+  const opportunities = (await getAllOpportunities())
+    .filter((opportunity) => opportunity.approvalStatus === "approved")
+    .sort((a, b) => {
+      const statusOrder = ["open", "closing soon", "closed"];
+      const statusDiff = statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
+      if (statusDiff) return statusDiff;
+      return (a.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER);
+    });
 
   return (
     <>

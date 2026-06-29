@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { eventRegistrationAction } from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
-import { getStoredEventBySlug, storedEventToView } from "@/lib/admin-content-store";
+import { getDeletedEventSlugs, getStoredEventBySlug, storedEventToView } from "@/lib/admin-content-store";
 import { ButtonLink, PageHero, Pill, StatusBadge } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { getArchiveManifest } from "@/lib/archive";
@@ -24,11 +24,12 @@ function eventDurationLabel(category: string, title: string, description: string
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const [databaseEvent, storedEvent] = await Promise.all([
+  const [databaseEvent, storedEvent, deletedEventSlugs] = await Promise.all([
     prisma.event.findUnique({ where: { slug } }),
     getStoredEventBySlug(slug),
+    getDeletedEventSlugs(),
   ]);
-  const event = storedEvent ? storedEventToView(storedEvent) : databaseEvent;
+  const event = storedEvent ? storedEventToView(storedEvent) : deletedEventSlugs.includes(slug) ? null : databaseEvent;
   return { title: event?.title ?? "Event" };
 }
 
@@ -41,12 +42,13 @@ export default async function EventDetailPage({
 }) {
   const { slug } = await params;
   const { registered } = await searchParams;
-  const [databaseEvent, storedEvent, archive] = await Promise.all([
+  const [databaseEvent, storedEvent, deletedEventSlugs, archive] = await Promise.all([
     prisma.event.findUnique({ where: { slug } }),
     getStoredEventBySlug(slug),
+    getDeletedEventSlugs(),
     getArchiveManifest(),
   ]);
-  const event = storedEvent ? storedEventToView(storedEvent) : databaseEvent;
+  const event = storedEvent ? storedEventToView(storedEvent) : deletedEventSlugs.includes(slug) ? null : databaseEvent;
   if (!event) notFound();
   const albums = archive.albums.filter((album) => album.eventSlug === event.slug);
   const registrationOpen = isActiveEventStatus(event.status);

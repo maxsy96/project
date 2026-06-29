@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getStoredAchievements, storedAchievementToView } from "@/lib/admin-content-store";
+import { getDeletedAchievementIds, getStoredAchievements, storedAchievementToView } from "@/lib/admin-content-store";
+import { getAllAlumni } from "@/lib/runtime-store";
 import { ButtonLink, PageHero, SectionHeader } from "@/components/ui";
 import { AchievementExplorer } from "@/components/achievement-explorer";
 import { PersonCard } from "@/components/cards";
@@ -9,15 +10,18 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Alumni & Achievements" };
 
 export default async function AchievementsPage() {
-  const [alumni, databaseAchievements, storedAchievements] = await Promise.all([
-    prisma.alumni.findMany({ orderBy: { graduationYear: "desc" } }),
+  const [alumni, databaseAchievements, storedAchievements, deletedAchievementIds] = await Promise.all([
+    getAllAlumni(),
     prisma.achievement.findMany({ orderBy: [{ year: "desc" }, { createdAt: "desc" }] }),
     getStoredAchievements(),
+    getDeletedAchievementIds(),
   ]);
+  const deleted = new Set(deletedAchievementIds);
   const achievements = [
     ...storedAchievements.map(storedAchievementToView),
-    ...databaseAchievements,
+    ...databaseAchievements.filter((achievement) => !deleted.has(achievement.id)),
   ].sort((a, b) => b.year - a.year || b.createdAt.getTime() - a.createdAt.getTime());
+  alumni.sort((a, b) => Number(b.graduationYear) - Number(a.graduationYear));
 
   return (
     <>

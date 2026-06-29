@@ -2,7 +2,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { interestedAction } from "@/lib/actions";
-import { prisma } from "@/lib/prisma";
+import { getAllOpportunities, getOpportunityBySlug } from "@/lib/runtime-store";
 import { fromJsonList, formatDate } from "@/lib/utils";
 import { ButtonLink, PageHero, Pill, StatusBadge } from "@/components/ui";
 import { OpportunityCard } from "@/components/cards";
@@ -48,23 +48,19 @@ function opportunityDurationLabel(type: string, title: string, description: stri
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const opportunity = await prisma.opportunity.findUnique({ where: { slug } });
+  const opportunity = await getOpportunityBySlug(slug);
   return { title: opportunity?.title ?? "Opportunity" };
 }
 
 export default async function OpportunityDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const opportunity = await prisma.opportunity.findUnique({ where: { slug } });
-  if (!opportunity) notFound();
+  const opportunity = await getOpportunityBySlug(slug);
+  if (!opportunity || opportunity.approvalStatus !== "approved") notFound();
   const sectorList = fromJsonList(opportunity.sectors);
-  const related = await prisma.opportunity.findMany({
-    where: {
-      approvalStatus: "approved",
-      id: { not: opportunity.id },
-    },
-    take: 3,
-    orderBy: { deadline: "asc" },
-  });
+  const related = (await getAllOpportunities())
+    .filter((item) => item.approvalStatus === "approved" && item.id !== opportunity.id)
+    .sort((a, b) => (a.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER))
+    .slice(0, 3);
 
   return (
     <>

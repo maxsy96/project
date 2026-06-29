@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createEventAction, deleteEventAction } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getStoredEvents, storedEventToView } from "@/lib/admin-content-store";
+import { getDeletedEventSlugs, getStoredEvents, storedEventToView } from "@/lib/admin-content-store";
 import { mergeEventsBySlug, sortEventsForDisplay } from "@/lib/event-utils";
 import { formatDate } from "@/lib/utils";
 import { AdminShell } from "@/components/admin-shell";
@@ -14,13 +14,15 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminEventsPage() {
   await requireAdmin();
-  const [databaseEvents, storedEvents] = await Promise.all([
+  const [databaseEvents, storedEvents, deletedEventSlugs] = await Promise.all([
     prisma.event.findMany({ orderBy: { date: "desc" } }),
     getStoredEvents(),
+    getDeletedEventSlugs(),
   ]);
+  const deleted = new Set(deletedEventSlugs);
   const events = [
     ...storedEvents.map(storedEventToView),
-    ...databaseEvents,
+    ...databaseEvents.filter((event) => !deleted.has(event.slug)),
   ];
   const mergedEvents = sortEventsForDisplay(mergeEventsBySlug(events));
 

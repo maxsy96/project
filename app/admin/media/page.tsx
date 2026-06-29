@@ -1,6 +1,6 @@
 import { createMediaAction, deleteMediaAction } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getAllMediaItems } from "@/lib/runtime-store";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminTable, AdminTd, AdminTh } from "@/components/admin-table";
 import { SimpleContentForm } from "@/components/admin-forms";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminMediaPage() {
   await requireAdmin();
-  const media = await prisma.mediaItem.findMany({ orderBy: { createdAt: "desc" } });
+  const media = (await getAllMediaItems()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   return (
     <AdminShell title="Media Management">
       <div className="grid gap-6">

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getAllStudentInterests } from "@/lib/runtime-store";
 import { csvEscape, fromJsonList, formatDateTime } from "@/lib/utils";
 
 export async function GET() {
   if (!(await isAdmin())) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
-  const students = await prisma.studentInterest.findMany({ orderBy: { createdAt: "desc" } });
+  const students = (await getAllStudentInterests()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   const header = ["Name", "Email", "Academic year", "Major", "Interests", "Opportunity preferences", "Preferred locations", "Created date"];
   const rows = students.map((student) => [
     student.fullName,

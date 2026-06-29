@@ -14,10 +14,29 @@ import {
   deleteStoredAchievement,
   deleteStoredEvent,
   getStoredEvents,
+  markDatabaseAchievementDeleted,
+  markDatabaseEventDeleted,
   updateStoredEvent,
   upsertStoredEventBySlug,
 } from "@/lib/admin-content-store";
 import { prisma } from "@/lib/prisma";
+import {
+  createAlumni,
+  createMediaItem,
+  createMember,
+  deleteAlumniById,
+  deleteContactSubmissionById,
+  deleteMediaItemById,
+  deleteMemberById,
+  deleteOpportunityById,
+  deletePartnerSubmissionById,
+  getAllOpportunities,
+  getPartnerSubmissionById,
+  saveOpportunity,
+  updateContactStatus,
+  updateOpportunityStatus,
+  updatePartnerSubmissionStatus,
+} from "@/lib/runtime-store";
 import { formList, formString, slugify, toJsonList } from "@/lib/utils";
 
 function dateOrNull(value: string) {
@@ -32,8 +51,9 @@ async function uniqueOpportunitySlug(title: string, currentId?: number) {
   const base = slugify(title);
   let slug = base;
   let counter = 2;
+  const opportunities = await getAllOpportunities();
   while (true) {
-    const existing = await prisma.opportunity.findUnique({ where: { slug } });
+    const existing = opportunities.find((opportunity) => opportunity.slug === slug);
     if (!existing || existing.id === currentId) return slug;
     slug = `${base}-${counter}`;
     counter += 1;
@@ -89,6 +109,7 @@ function opportunityData(formData: FormData) {
     status: formString(formData, "status") || "open",
     source: formString(formData, "source") || "Admin",
     imageUrl: formString(formData, "imageUrl"),
+    submittedByPartner: false,
     approvalStatus: "approved",
   };
 }
@@ -96,11 +117,9 @@ function opportunityData(formData: FormData) {
 export async function createOpportunityAction(formData: FormData) {
   await requireAdmin();
   const data = opportunityData(formData);
-  await prisma.opportunity.create({
-    data: {
-      ...data,
-      slug: await uniqueOpportunitySlug(data.title),
-    },
+  await saveOpportunity({
+    ...data,
+    slug: await uniqueOpportunitySlug(data.title),
   });
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
@@ -110,13 +129,10 @@ export async function createOpportunityAction(formData: FormData) {
 export async function updateOpportunityAction(id: number, formData: FormData) {
   await requireAdmin();
   const data = opportunityData(formData);
-  await prisma.opportunity.update({
-    where: { id },
-    data: {
-      ...data,
-      slug: await uniqueOpportunitySlug(data.title, id),
-    },
-  });
+  await saveOpportunity({
+    ...data,
+    slug: await uniqueOpportunitySlug(data.title, id),
+  }, id);
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
   redirect("/admin/opportunities");
@@ -124,72 +140,73 @@ export async function updateOpportunityAction(id: number, formData: FormData) {
 
 export async function deleteOpportunityAction(id: number) {
   await requireAdmin();
-  await prisma.opportunity.delete({ where: { id } });
+  await deleteOpportunityById(id);
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
 }
 
 export async function archiveOpportunityAction(id: number) {
   await requireAdmin();
-  await prisma.opportunity.update({ where: { id }, data: { status: "closed" } });
+  await updateOpportunityStatus(id, "closed");
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
 }
 
 export async function approvePartnerSubmissionAction(id: number) {
   await requireAdmin();
-  const submission = await prisma.partnerSubmission.findUnique({ where: { id } });
+  const submission = await getPartnerSubmissionById(id);
   if (!submission) return;
   const title = submission.opportunityTitle;
-  await prisma.opportunity.create({
-    data: {
-      title,
-      slug: await uniqueOpportunitySlug(title),
-      organization: submission.organizationName,
-      type: submission.opportunityType,
-      sectors: submission.sectors,
-      location: submission.location,
-      paidStatus: "Pending details",
-      deadline: submission.deadline,
-      description: submission.description,
-      eligibility: submission.eligibility,
-      requirements: submission.eligibility,
-      benefits: submission.notes || "Benefits to be confirmed by partner.",
-      applicationUrl: submission.applicationUrl,
-      contactEmail: submission.email,
-      status: "open",
-      source: "Partner submission",
-      submittedByPartner: true,
-      approvalStatus: "approved",
-      imageUrl: "/images/events/cavm-event-09.jpg",
-    },
+  await saveOpportunity({
+    title,
+    slug: await uniqueOpportunitySlug(title),
+    organization: submission.organizationName,
+    type: submission.opportunityType,
+    sectors: submission.sectors,
+    location: submission.location,
+    isRemote: false,
+    isAbroad: false,
+    isGovernmentRelated: false,
+    paidStatus: "Pending details",
+    deadline: submission.deadline,
+    description: submission.description,
+    eligibility: submission.eligibility,
+    requirements: submission.eligibility,
+    benefits: submission.notes || "Benefits to be confirmed by partner.",
+    applicationUrl: submission.applicationUrl,
+    contactEmail: submission.email,
+    status: "open",
+    source: "Partner submission",
+    submittedByPartner: true,
+    approvalStatus: "approved",
+    imageUrl: "/images/events/cavm-event-09.jpg",
   });
-  await prisma.partnerSubmission.update({ where: { id }, data: { approvalStatus: "approved" } });
+  await updatePartnerSubmissionStatus(id, "approved");
   revalidatePath("/opportunities");
   revalidatePath("/admin/partner-submissions");
 }
 
 export async function rejectPartnerSubmissionAction(id: number) {
   await requireAdmin();
-  await prisma.partnerSubmission.update({ where: { id }, data: { approvalStatus: "rejected" } });
+  await updatePartnerSubmissionStatus(id, "rejected");
   revalidatePath("/admin/partner-submissions");
 }
 
 export async function deletePartnerSubmissionAction(id: number) {
   await requireAdmin();
-  await prisma.partnerSubmission.delete({ where: { id } });
+  await deletePartnerSubmissionById(id);
   revalidatePath("/admin/partner-submissions");
 }
 
 export async function markContactReadAction(id: number, status: string) {
   await requireAdmin();
-  await prisma.contactSubmission.update({ where: { id }, data: { status } });
+  await updateContactStatus(id, status);
   revalidatePath("/admin/contact-submissions");
 }
 
 export async function deleteContactAction(id: number) {
   await requireAdmin();
-  await prisma.contactSubmission.delete({ where: { id } });
+  await deleteContactSubmissionById(id);
   revalidatePath("/admin/contact-submissions");
 }
 
@@ -252,7 +269,10 @@ export async function deleteEventAction(id: number) {
     return;
   }
 
-  await prisma.event.delete({ where: { id } });
+  const databaseEvent = await prisma.event.findUnique({ where: { id } });
+  if (databaseEvent) {
+    await markDatabaseEventDeleted(databaseEvent.slug);
+  }
   revalidatePath("/");
   revalidatePath("/events");
   revalidatePath("/admin/events");
@@ -282,23 +302,21 @@ export async function deleteAchievementAction(id: number) {
     return;
   }
 
-  await prisma.achievement.delete({ where: { id } });
+  await markDatabaseAchievementDeleted(id);
   revalidatePath("/achievements");
   revalidatePath("/admin/achievements");
 }
 
 export async function createMediaAction(formData: FormData) {
   await requireAdmin();
-  await prisma.mediaItem.create({
-    data: {
-      title: formString(formData, "title"),
-      description: formString(formData, "description"),
-      category: formString(formData, "category"),
-      mediaType: formString(formData, "mediaType"),
-      imageUrl: formString(formData, "imageUrl"),
-      videoUrl: formString(formData, "videoUrl"),
-      date: dateOrNull(formString(formData, "date")),
-    },
+  await createMediaItem({
+    title: formString(formData, "title"),
+    description: formString(formData, "description"),
+    category: formString(formData, "category"),
+    mediaType: formString(formData, "mediaType"),
+    imageUrl: formString(formData, "imageUrl"),
+    videoUrl: formString(formData, "videoUrl"),
+    date: dateOrNull(formString(formData, "date")),
   });
   revalidatePath("/media");
   revalidatePath("/admin/media");
@@ -306,7 +324,7 @@ export async function createMediaAction(formData: FormData) {
 
 export async function deleteMediaAction(id: number) {
   await requireAdmin();
-  await prisma.mediaItem.delete({ where: { id } });
+  await deleteMediaItemById(id);
   revalidatePath("/media");
   revalidatePath("/admin/media");
 }
@@ -315,20 +333,18 @@ export async function createMemberAction(formData: FormData) {
   await requireAdmin();
   const studentId = formString(formData, "studentId");
   const email = formString(formData, "email") || (studentId ? `${studentId}@uaeu.ac.ae` : "");
-  await prisma.member.create({
-    data: {
-      name: formString(formData, "name"),
-      studentId,
-      email,
-      role: formString(formData, "role"),
-      committee: formString(formData, "committee"),
-      areaOfInterest: formString(formData, "areaOfInterest"),
-      bio: formString(formData, "bio"),
-      imageUrl: formString(formData, "imageUrl"),
-      socialUrl: formString(formData, "socialUrl"),
-      order: Number(formString(formData, "order")) || 0,
-      isActive: true,
-    },
+  await createMember({
+    name: formString(formData, "name"),
+    studentId,
+    email,
+    role: formString(formData, "role"),
+    committee: formString(formData, "committee"),
+    areaOfInterest: formString(formData, "areaOfInterest"),
+    bio: formString(formData, "bio"),
+    imageUrl: formString(formData, "imageUrl"),
+    socialUrl: formString(formData, "socialUrl"),
+    order: Number(formString(formData, "order")) || 0,
+    isActive: true,
   });
   revalidatePath("/members");
   revalidatePath("/admin/members");
@@ -336,24 +352,22 @@ export async function createMemberAction(formData: FormData) {
 
 export async function deleteMemberAction(id: number) {
   await requireAdmin();
-  await prisma.member.delete({ where: { id } });
+  await deleteMemberById(id);
   revalidatePath("/members");
   revalidatePath("/admin/members");
 }
 
 export async function createAlumniAction(formData: FormData) {
   await requireAdmin();
-  await prisma.alumni.create({
-    data: {
-      name: formString(formData, "name"),
-      graduationYear: formString(formData, "graduationYear"),
-      currentRole: formString(formData, "currentRole"),
-      sector: formString(formData, "sector"),
-      story: formString(formData, "story"),
-      advice: formString(formData, "advice"),
-      imageUrl: formString(formData, "imageUrl"),
-      socialUrl: formString(formData, "socialUrl"),
-    },
+  await createAlumni({
+    name: formString(formData, "name"),
+    graduationYear: formString(formData, "graduationYear"),
+    currentRole: formString(formData, "currentRole"),
+    sector: formString(formData, "sector"),
+    story: formString(formData, "story"),
+    advice: formString(formData, "advice"),
+    imageUrl: formString(formData, "imageUrl"),
+    socialUrl: formString(formData, "socialUrl"),
   });
   revalidatePath("/alumni");
   revalidatePath("/admin/alumni");
@@ -361,7 +375,7 @@ export async function createAlumniAction(formData: FormData) {
 
 export async function deleteAlumniAction(id: number) {
   await requireAdmin();
-  await prisma.alumni.delete({ where: { id } });
+  await deleteAlumniById(id);
   revalidatePath("/alumni");
   revalidatePath("/admin/alumni");
 }

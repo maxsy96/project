@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { updateEventAction } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
-import { getStoredEvents, storedEventToView, type StoredEvent } from "@/lib/admin-content-store";
+import { getDeletedEventSlugs, getStoredEvents, storedEventToView, type StoredEvent } from "@/lib/admin-content-store";
 import { prisma } from "@/lib/prisma";
 import { AdminShell } from "@/components/admin-shell";
 import { EventAdminForm } from "@/components/admin-forms";
@@ -20,6 +20,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     : await prisma.event.findUnique({ where: { id } });
 
   if (!event) notFound();
+  if (id > 0 && (await getDeletedEventSlugs()).includes(event.slug)) notFound();
   const eventForForm = id < 0 ? storedEventToView(event as StoredEvent) : event;
   const viewEvent = {
     title: eventForForm.title,

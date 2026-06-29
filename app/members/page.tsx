@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
+import { getAllMembers } from "@/lib/runtime-store";
 import { PageHero, SectionHeader } from "@/components/ui";
 import { PersonCard } from "@/components/cards";
 
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Members" };
 
 export default async function MembersPage() {
-  const members = await prisma.member.findMany({ where: { isActive: true }, orderBy: { order: "asc" } });
+  const members = (await getAllMembers(false)).sort((a, b) => a.order - b.order);
   const groups = Array.from(new Set(members.map((member) => member.committee)));
   return (
     <>

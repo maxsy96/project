@@ -1,6 +1,12 @@
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getStoredEvents, storedEventToView } from "@/lib/admin-content-store";
+import { getDeletedEventSlugs, getStoredEvents, storedEventToView } from "@/lib/admin-content-store";
+import {
+  getAllContactSubmissions,
+  getAllOpportunities,
+  getAllPartnerSubmissions,
+  getAllStudentInterests,
+} from "@/lib/runtime-store";
 import { AdminShell } from "@/components/admin-shell";
 import { StatusBadge } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
@@ -11,34 +17,37 @@ export default async function AdminOverviewPage() {
   await requireAdmin();
   const [
     opportunities,
-    openOpportunities,
     students,
     partnerSubmissions,
     databaseUpcomingEvents,
     storedEvents,
+    deletedEventSlugs,
     recentMessages,
   ] = await Promise.all([
-    prisma.opportunity.count(),
-    prisma.opportunity.count({ where: { status: { in: ["open", "closing soon"] } } }),
-    prisma.studentInterest.count(),
-    prisma.partnerSubmission.count(),
+    getAllOpportunities(),
+    getAllStudentInterests(),
+    getAllPartnerSubmissions(),
     prisma.event.findMany({ where: { status: "upcoming" }, orderBy: { date: "asc" }, take: 5 }),
     getStoredEvents(),
-    prisma.contactSubmission.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
+    getDeletedEventSlugs(),
+    getAllContactSubmissions(),
   ]);
+  const deleted = new Set(deletedEventSlugs);
   const upcomingEvents = [
     ...storedEvents.map(storedEventToView).filter((event) => event.status === "upcoming"),
-    ...databaseUpcomingEvents,
+    ...databaseUpcomingEvents.filter((event) => !deleted.has(event.slug)),
   ].sort((a, b) => a.date.getTime() - b.date.getTime()).slice(0, 5);
+  const openOpportunities = opportunities.filter((opportunity) => ["open", "closing soon"].includes(opportunity.status)).length;
+  const latestMessages = recentMessages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 5);
 
   return (
     <AdminShell title="Overview">
       <div className="grid gap-5 md:grid-cols-4">
         {[
-          ["Opportunities", opportunities],
+          ["Opportunities", opportunities.length],
           ["Open opportunities", openOpportunities],
-          ["Registered students", students],
-          ["Partner submissions", partnerSubmissions],
+          ["Registered students", students.length],
+          ["Partner submissions", partnerSubmissions.length],
         ].map(([label, value]) => (
           <div key={label as string} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm font-semibold text-slate-500">{label as string}</p>
@@ -61,7 +70,7 @@ export default async function AdminOverviewPage() {
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-950">Recent messages</h2>
           <div className="mt-4 grid gap-3">
-            {recentMessages.map((message) => (
+            {latestMessages.map((message) => (
               <div key={message.id} className="rounded-md bg-slate-50 p-3">
                 <p className="font-medium">{message.subject}</p>
                 <p className="text-sm text-slate-500">{message.name} - {message.status}</p>

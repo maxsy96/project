@@ -111,12 +111,12 @@ The app is a real dynamic Next.js application, not a static demo. It includes:
 - Dynamic forms.
 - Prisma schema and seed data.
 - Netlify server function deployment.
-- Netlify Blobs storage for admin-added events and achievements.
+- Netlify Blobs storage for visitor submissions and admin-managed content.
 - Email notification integration through Resend.
 
-Important production note: SQLite is suitable for local development and seeded launch data. For permanent production storage of student registrations, partner submissions, contact messages, opportunities, members, alumni, and media records, connect Prisma to a hosted production database such as Netlify DB, Neon, Supabase, or another PostgreSQL provider.
+Production storage note: SQLite is used for seeded launch content. On Netlify, visitor submissions and admin-created or admin-deleted records are stored in Netlify Blobs, including student registrations, partner submissions, contact messages, opportunity updates, events, achievements, media, members, and alumni.
 
-Until a hosted database is configured, email notifications are the safest external record for new form submissions.
+Email notifications are still recommended as an extra record for new form submissions.
 
 ## 8. Local Development
 
@@ -185,4 +185,4 @@ Before sharing the site widely:
 - Confirm all media albums use the correct event photos.
 - Confirm email notifications reach `Clubcavm@gmail.com`.
 - Confirm admin credentials are not shared publicly.
-- Confirm a hosted database plan is in place for long-term production records.
+- Confirm Netlify Blobs submissions are visible in admin after deployment.

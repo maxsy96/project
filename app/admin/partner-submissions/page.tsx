@@ -1,6 +1,6 @@
 import { approvePartnerSubmissionAction, deletePartnerSubmissionAction, rejectPartnerSubmissionAction } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getAllPartnerSubmissions } from "@/lib/runtime-store";
 import { fromJsonList, formatDate } from "@/lib/utils";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminTable, AdminTd, AdminTh } from "@/components/admin-table";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PartnerSubmissionsPage() {
   await requireAdmin();
-  const submissions = await prisma.partnerSubmission.findMany({ orderBy: { createdAt: "desc" } });
+  const submissions = (await getAllPartnerSubmissions()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   return (
     <AdminShell title="Partner Submissions">
       <AdminTable>

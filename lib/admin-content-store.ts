@@ -39,11 +39,15 @@ export type StoredAchievement = {
 type AdminContent = {
   events: StoredEvent[];
   achievements: StoredAchievement[];
+  deletedEventSlugs: string[];
+  deletedAchievementIds: number[];
 };
 
 const emptyContent: AdminContent = {
   events: [],
   achievements: [],
+  deletedEventSlugs: [],
+  deletedAchievementIds: [],
 };
 
 function cleanContent(value: unknown): AdminContent {
@@ -55,6 +59,8 @@ function cleanContent(value: unknown): AdminContent {
   return {
     events: Array.isArray(content.events) ? content.events : [],
     achievements: Array.isArray(content.achievements) ? content.achievements : [],
+    deletedEventSlugs: Array.isArray(content.deletedEventSlugs) ? content.deletedEventSlugs : [],
+    deletedAchievementIds: Array.isArray(content.deletedAchievementIds) ? content.deletedAchievementIds : [],
   };
 }
 
@@ -123,6 +129,11 @@ export async function getStoredEvents() {
   return content.events;
 }
 
+export async function getDeletedEventSlugs() {
+  const content = await readAdminContent();
+  return content.deletedEventSlugs;
+}
+
 export async function getStoredEventBySlug(slug: string) {
   const events = await getStoredEvents();
   return events.find((event) => event.slug === slug) ?? null;
@@ -139,6 +150,7 @@ export async function createStoredEvent(event: Omit<StoredEvent, "id" | "created
   };
 
   content.events = [storedEvent, ...content.events];
+  content.deletedEventSlugs = content.deletedEventSlugs.filter((slug) => slug !== storedEvent.slug);
   await writeAdminContent(content);
   return storedEvent;
 }
@@ -158,6 +170,7 @@ export async function updateStoredEvent(id: number, event: Omit<StoredEvent, "id
     updatedAt: now,
   };
   content.events[index] = updatedEvent;
+  content.deletedEventSlugs = content.deletedEventSlugs.filter((slug) => slug !== updatedEvent.slug);
   await writeAdminContent(content);
   return updatedEvent;
 }
@@ -186,6 +199,7 @@ export async function upsertStoredEventBySlug(event: Omit<StoredEvent, "id" | "c
     updatedAt: now,
   };
   content.events = [storedEvent, ...content.events];
+  content.deletedEventSlugs = content.deletedEventSlugs.filter((slug) => slug !== storedEvent.slug);
   await writeAdminContent(content);
   return storedEvent;
 }
@@ -202,9 +216,21 @@ export async function deleteStoredEvent(id: number) {
   return true;
 }
 
+export async function markDatabaseEventDeleted(slug: string) {
+  const content = await readAdminContent();
+  content.events = content.events.filter((event) => event.slug !== slug);
+  if (!content.deletedEventSlugs.includes(slug)) content.deletedEventSlugs.push(slug);
+  await writeAdminContent(content);
+}
+
 export async function getStoredAchievements() {
   const content = await readAdminContent();
   return content.achievements;
+}
+
+export async function getDeletedAchievementIds() {
+  const content = await readAdminContent();
+  return content.deletedAchievementIds;
 }
 
 export async function createStoredAchievement(achievement: Omit<StoredAchievement, "id" | "createdAt">) {
@@ -216,6 +242,7 @@ export async function createStoredAchievement(achievement: Omit<StoredAchievemen
   };
 
   content.achievements = [storedAchievement, ...content.achievements];
+  content.deletedAchievementIds = content.deletedAchievementIds.filter((id) => id !== storedAchievement.id);
   await writeAdminContent(content);
   return storedAchievement;
 }
@@ -230,6 +257,13 @@ export async function deleteStoredAchievement(id: number) {
   content.achievements = nextAchievements;
   await writeAdminContent(content);
   return true;
+}
+
+export async function markDatabaseAchievementDeleted(id: number) {
+  const content = await readAdminContent();
+  content.achievements = content.achievements.filter((achievement) => achievement.id !== id);
+  if (!content.deletedAchievementIds.includes(id)) content.deletedAchievementIds.push(id);
+  await writeAdminContent(content);
 }
 
 export function storedEventToView(event: StoredEvent) {

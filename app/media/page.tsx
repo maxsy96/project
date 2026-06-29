@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
+import { getAllMediaItems } from "@/lib/runtime-store";
 import { PageHero } from "@/components/ui";
 import { MediaGallery } from "@/components/media-gallery";
 import { getArchiveManifest } from "@/lib/archive";
@@ -9,9 +9,10 @@ export const metadata: Metadata = { title: "Media" };
 
 export default async function MediaPage() {
   const [items, archive] = await Promise.all([
-    prisma.mediaItem.findMany({ orderBy: { date: "desc" } }),
+    getAllMediaItems(),
     getArchiveManifest(),
   ]);
+  items.sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0));
   return (
     <>
       <PageHero

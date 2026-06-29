@@ -1,6 +1,6 @@
 import { createMemberAction, deleteMemberAction } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getAllMembers } from "@/lib/runtime-store";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminTable, AdminTd, AdminTh } from "@/components/admin-table";
 import { SimpleContentForm } from "@/components/admin-forms";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminMembersPage() {
   await requireAdmin();
-  const members = await prisma.member.findMany({ orderBy: { order: "asc" } });
+  const members = (await getAllMembers()).sort((a, b) => a.order - b.order);
   return (
     <AdminShell title="Members Management">
       <div className="grid gap-6">

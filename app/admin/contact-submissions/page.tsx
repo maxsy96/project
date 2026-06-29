@@ -1,6 +1,6 @@
 import { deleteContactAction, markContactReadAction } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getAllContactSubmissions } from "@/lib/runtime-store";
 import { formatDateTime } from "@/lib/utils";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminTable, AdminTd, AdminTh } from "@/components/admin-table";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ContactSubmissionsPage() {
   await requireAdmin();
-  const messages = await prisma.contactSubmission.findMany({ orderBy: { createdAt: "desc" } });
+  const messages = (await getAllContactSubmissions()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   return (
     <AdminShell title="Contact Messages">
       <AdminTable>

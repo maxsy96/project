@@ -54,6 +54,6 @@ For the easier Windows path, open `SETUP_EMAIL_NOTIFICATIONS.bat`, paste the Res
 
 ## Production database note
 
-The original seeded public content uses SQLite. New admin-added events and achievements are stored in Netlify Blobs so they can persist on Netlify without a separate database account.
+The original seeded public content uses SQLite. Visitor submissions and admin-managed live content are stored in Netlify Blobs so they can persist on Netlify without a separate database account.
 
-Student registrations, partner submissions, contact messages, opportunities, members, alumni, and media still use SQLite. For those to persist permanently in production, move Prisma to a hosted database such as Netlify DB, Neon, Supabase, or another Postgres provider.
+This includes student registrations, partner submissions, contact messages, opportunity changes, event changes, achievements, media, members, and alumni. A hosted database such as Netlify DB, Neon, Supabase, or another Postgres provider can still be added later for advanced reporting, but it is no longer required for the admin buttons and visitor forms to work on Netlify.

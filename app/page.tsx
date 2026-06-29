@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import { ArrowRight, Building2, CalendarDays, Handshake, Newspaper, ShieldCheck, UsersRound } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { getStoredEvents, storedEventToView } from "@/lib/admin-content-store";
+import {
+  getDeletedAchievementIds,
+  getDeletedEventSlugs,
+  getStoredAchievements,
+  getStoredEvents,
+  storedAchievementToView,
+  storedEventToView,
+} from "@/lib/admin-content-store";
+import { getAllOpportunities } from "@/lib/runtime-store";
 import { isActiveEventStatus, mergeEventsBySlug, sortEventsForDisplay } from "@/lib/event-utils";
 import { ButtonLink, SectionHeader } from "@/components/ui";
 import { OpportunityCard, EventCard, AchievementCard } from "@/components/cards";
@@ -141,21 +149,43 @@ const featuredAchievementTitles = [
 ];
 
 export default async function Home() {
-  const [opportunities, databaseEvents, storedEvents, achievementRows] = await Promise.all([
-    prisma.opportunity.findMany({
-      where: { approvalStatus: "approved" },
-      orderBy: [{ status: "asc" }, { deadline: "asc" }],
-      take: 3,
-    }),
+  const [
+    opportunityRows,
+    databaseEvents,
+    storedEvents,
+    deletedEventSlugs,
+    databaseAchievementRows,
+    storedAchievements,
+    deletedAchievementIds,
+  ] = await Promise.all([
+    getAllOpportunities(),
     prisma.event.findMany({ where: { status: "upcoming" }, orderBy: { date: "asc" }, take: 3 }),
     getStoredEvents(),
+    getDeletedEventSlugs(),
     prisma.achievement.findMany({ where: { title: { in: featuredAchievementTitles } } }),
+    getStoredAchievements(),
+    getDeletedAchievementIds(),
   ]);
+  const opportunities = opportunityRows
+    .filter((opportunity) => opportunity.approvalStatus === "approved")
+    .sort((a, b) => {
+      const statusOrder = ["open", "closing soon", "closed"];
+      const statusDiff = statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
+      if (statusDiff) return statusDiff;
+      return (a.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER);
+    })
+    .slice(0, 3);
+  const deletedEvents = new Set(deletedEventSlugs);
   const events = [
     ...storedEvents.map(storedEventToView),
-    ...databaseEvents,
+    ...databaseEvents.filter((event) => !deletedEvents.has(event.slug)),
   ];
   const visibleEvents = sortEventsForDisplay(mergeEventsBySlug(events)).filter((event) => isActiveEventStatus(event.status)).slice(0, 3);
+  const deletedAchievements = new Set(deletedAchievementIds);
+  const achievementRows = [
+    ...storedAchievements.map(storedAchievementToView),
+    ...databaseAchievementRows.filter((achievement) => !deletedAchievements.has(achievement.id)),
+  ];
   const achievementMap = new Map(achievementRows.map((achievement) => [achievement.title, achievement]));
   const achievements = featuredAchievementTitles
     .map((title) => achievementMap.get(title))

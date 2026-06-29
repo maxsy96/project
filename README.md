@@ -35,7 +35,7 @@ The guide explains admin login, where visitor forms go, event updates, opportuni
 - Prisma ORM
 - SQLite for local development and seeded launch data
 - Netlify server functions
-- Netlify Blobs for admin-added events and achievements
+- Netlify Blobs for form submissions and admin-edited live content
 - Zod validation
 - lucide-react icons
 
@@ -117,9 +117,9 @@ pnpm db:studio
 
 This is a real dynamic application, not a static demo. It includes protected admin pages, server actions, form handling, email notifications, Prisma models, and Netlify deployment support.
 
-For long-term production records, connect Prisma to a hosted production database such as Netlify DB, Neon, Supabase, or another PostgreSQL provider. SQLite is appropriate for local development and seeded launch content, but a hosted database is recommended for durable student registrations, partner submissions, contact messages, opportunity updates, members, alumni, and media records.
+Seeded launch content is bundled in SQLite. Visitor submissions and admin-created or admin-deleted content are stored in Netlify Blobs on Netlify, including student registrations, partner submissions, contact messages, opportunity updates, events, achievements, media, members, and alumni.
 
-Admin-added events and achievements already use Netlify Blobs on Netlify.
+A hosted database such as Netlify DB, Neon, Supabase, or another PostgreSQL provider can still be added later if the club wants advanced reporting or database administration, but the current Netlify version is wired for durable dynamic operation without drag-and-drop static hosting.
 
 ## Netlify Deployment
 

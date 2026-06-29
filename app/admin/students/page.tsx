@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getAllOpportunities, getAllStudentInterests } from "@/lib/runtime-store";
 import { fromJsonList, matchScore } from "@/lib/utils";
 import { sectors, opportunityTypes } from "@/lib/constants";
 import { AdminShell } from "@/components/admin-shell";
@@ -12,9 +12,11 @@ export default async function AdminStudentsPage({ searchParams }: { searchParams
   await requireAdmin();
   const { sector = "", type = "" } = await searchParams;
   const [students, opportunities] = await Promise.all([
-    prisma.studentInterest.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.opportunity.findMany({ where: { approvalStatus: "approved" } }),
+    getAllStudentInterests(),
+    getAllOpportunities(),
   ]);
+  students.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const approvedOpportunities = opportunities.filter((opportunity) => opportunity.approvalStatus === "approved");
   const filtered = students.filter((student) => {
     const studentSectors = fromJsonList(student.interests);
     const prefs = fromJsonList(student.opportunityPreferences);
@@ -33,7 +35,7 @@ export default async function AdminStudentsPage({ searchParams }: { searchParams
         <thead><tr><AdminTh>Student</AdminTh><AdminTh>Interests</AdminTh><AdminTh>Preferences</AdminTh><AdminTh>Matches</AdminTh></tr></thead>
         <tbody className="divide-y divide-slate-200">
           {filtered.map((student) => {
-            const matches = opportunities
+            const matches = approvedOpportunities
               .map((opportunity) => matchScore(fromJsonList(student.interests), fromJsonList(student.opportunityPreferences), fromJsonList(opportunity.sectors), opportunity.type))
               .filter((score) => score !== "No match");
             return (

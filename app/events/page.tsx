@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getStoredEvents, storedEventToView } from "@/lib/admin-content-store";
+import { getDeletedEventSlugs, getStoredEvents, storedEventToView } from "@/lib/admin-content-store";
 import { mergeEventsBySlug, sortEventsForDisplay } from "@/lib/event-utils";
 import { EventExplorer } from "@/components/event-explorer";
 import { PageHero } from "@/components/ui";
@@ -9,13 +9,15 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Events" };
 
 export default async function EventsPage() {
-  const [databaseEvents, storedEvents] = await Promise.all([
+  const [databaseEvents, storedEvents, deletedEventSlugs] = await Promise.all([
     prisma.event.findMany({ orderBy: { date: "desc" } }),
     getStoredEvents(),
+    getDeletedEventSlugs(),
   ]);
+  const deleted = new Set(deletedEventSlugs);
   const events = [
     ...storedEvents.map(storedEventToView),
-    ...databaseEvents,
+    ...databaseEvents.filter((event) => !deleted.has(event.slug)),
   ];
   const mergedEvents = sortEventsForDisplay(mergeEventsBySlug(events));
 

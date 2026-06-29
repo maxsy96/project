@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { archiveOpportunityAction, deleteOpportunityAction } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getAllOpportunities, getAllStudentInterests } from "@/lib/runtime-store";
 import { fromJsonList, matchScore } from "@/lib/utils";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminTable, AdminTd, AdminTh } from "@/components/admin-table";
@@ -12,9 +12,10 @@ export const dynamic = "force-dynamic";
 export default async function AdminOpportunitiesPage() {
   await requireAdmin();
   const [opportunities, students] = await Promise.all([
-    prisma.opportunity.findMany({ orderBy: { updatedAt: "desc" } }),
-    prisma.studentInterest.findMany(),
+    getAllOpportunities(),
+    getAllStudentInterests(),
   ]);
+  opportunities.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 
   return (
     <AdminShell title="Opportunities">
