@@ -151,33 +151,64 @@ export async function partnerSubmissionAction(_state: ActionState, formData: For
 
   if (!parsed.success) return validationState(parsed.error);
 
-  await createPartnerSubmission({
-    ...parsed.data,
-    phone: parsed.data.phone || "",
-    notes: parsed.data.notes || "",
-    applicationUrl: parsed.data.applicationUrl || "",
-    sectors: toJsonList(parsed.data.sectors),
-    deadline: parsed.data.deadline ? new Date(parsed.data.deadline).toISOString() : null,
-    approvalStatus: "pending",
-  });
+  const {
+    organizationName,
+    contactPerson,
+    email,
+    opportunityTitle,
+    opportunityType,
+    sectors,
+    description,
+    location,
+    deadline,
+    eligibility,
+    phone,
+    notes,
+    applicationUrl,
+  } = parsed.data;
+
+  try {
+    await createPartnerSubmission({
+      organizationName,
+      contactPerson,
+      email,
+      opportunityTitle,
+      opportunityType,
+      description,
+      location,
+      eligibility,
+      phone: phone || "",
+      notes: notes || "",
+      applicationUrl: applicationUrl || "",
+      sectors: toJsonList(sectors),
+      deadline: deadline ? new Date(`${deadline}T09:00:00.000Z`).toISOString() : null,
+      approvalStatus: "pending",
+    });
+  } catch (error) {
+    console.error("[partner-submission:save-failed]", error);
+    return {
+      ok: false,
+      message: "The partner submission could not be saved. Please try again or email Clubcavm@gmail.com.",
+    };
+  }
 
   await queueNotification(
     "New partner opportunity submitted",
-    `${parsed.data.organizationName} submitted ${parsed.data.opportunityTitle}.`,
+    `${organizationName} submitted ${opportunityTitle}.`,
     [
-      ["Organization", parsed.data.organizationName],
-      ["Contact person", parsed.data.contactPerson],
-      ["Email", parsed.data.email],
-      ["Phone", parsed.data.phone],
-      ["Opportunity title", parsed.data.opportunityTitle],
-      ["Opportunity type", parsed.data.opportunityType],
-      ["Sectors", parsed.data.sectors.join(", ")],
-      ["Location", parsed.data.location],
-      ["Deadline", parsed.data.deadline],
-      ["Eligibility", parsed.data.eligibility],
-      ["Application link", parsed.data.applicationUrl],
-      ["Description", parsed.data.description],
-      ["Notes", parsed.data.notes],
+      ["Organization", organizationName],
+      ["Contact person", contactPerson],
+      ["Email", email],
+      ["Phone", phone],
+      ["Opportunity title", opportunityTitle],
+      ["Opportunity type", opportunityType],
+      ["Sectors", sectors.join(", ")],
+      ["Location", location],
+      ["Deadline", deadline],
+      ["Eligibility", eligibility],
+      ["Application link", applicationUrl],
+      ["Description", description],
+      ["Notes", notes],
     ],
   );
 
