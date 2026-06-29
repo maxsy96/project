@@ -197,9 +197,6 @@ function serializeDates<T extends Record<string, unknown>>(item: T): T {
 }
 
 async function getBlobStore() {
-  const hasNetlifyContext = Boolean(process.env.NETLIFY || process.env.NETLIFY_BLOBS_CONTEXT);
-  if (!hasNetlifyContext) return null;
-
   try {
     const { getStore } = await import("@netlify/blobs");
     return getStore(storeName);
