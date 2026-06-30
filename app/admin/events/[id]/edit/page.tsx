@@ -33,6 +33,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     registrationUrl: eventForForm.registrationUrl,
     imageUrl: eventForForm.imageUrl,
     status: eventForForm.status,
+    submissionStatus: eventForForm.submissionStatus || "open",
     slug: eventForForm.slug,
   };
 

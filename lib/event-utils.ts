@@ -16,6 +16,11 @@ export function isActiveEventStatus(status: string) {
   return !normalized.includes("complete") && !normalized.includes("closed") && !normalized.includes("cancel");
 }
 
+export function isEventSubmissionOpen(eventStatus: string, submissionStatus = "open") {
+  if (!isActiveEventStatus(eventStatus)) return false;
+  return submissionStatus.toLowerCase() !== "closed";
+}
+
 export function sortEventsForDisplay<T extends EventForSorting>(events: T[]) {
   return [...events].sort((a, b) => {
     const rank = eventStatusRank(a.status) - eventStatusRank(b.status);

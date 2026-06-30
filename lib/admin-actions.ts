@@ -17,6 +17,7 @@ import {
   markDatabaseAchievementDeleted,
   markDatabaseEventDeleted,
   updateStoredEvent,
+  upsertStoredAchievement,
   upsertStoredEventBySlug,
 } from "@/lib/admin-content-store";
 import { prisma } from "@/lib/prisma";
@@ -243,6 +244,39 @@ function eventData(formData: FormData, slug: string) {
     registrationUrl: formString(formData, "registrationUrl"),
     imageUrl: formString(formData, "imageUrl"),
     status: formString(formData, "status") || "upcoming",
+    submissionStatus: formString(formData, "submissionStatus") || "open",
+  };
+}
+
+type ExistingEvent = {
+  title: string;
+  slug: string;
+  date: Date | string;
+  time: string;
+  location: string;
+  description: string;
+  category: string;
+  organizer: string;
+  registrationUrl: string;
+  imageUrl: string;
+  status: string;
+  submissionStatus?: string;
+};
+
+function eventDataFromExisting(event: ExistingEvent, submissionStatus: string) {
+  return {
+    title: event.title,
+    slug: event.slug,
+    date: event.date instanceof Date ? event.date.toISOString() : event.date,
+    time: event.time,
+    location: event.location,
+    description: event.description,
+    category: event.category,
+    organizer: event.organizer,
+    registrationUrl: event.registrationUrl,
+    imageUrl: event.imageUrl,
+    status: event.status,
+    submissionStatus,
   };
 }
 
@@ -269,9 +303,37 @@ export async function updateEventAction(id: number, formData: FormData) {
   redirect("/admin/events");
 }
 
+export async function updateEventSubmissionStatusAction(id: number, submissionStatus: string) {
+  await requireAdmin();
+  let slug = "";
+
+  if (id < 0) {
+    const existing = (await getStoredEvents()).find((event) => event.id === id);
+    if (!existing) redirect("/admin/events");
+    slug = existing.slug;
+    await updateStoredEvent(id, eventDataFromExisting(existing, submissionStatus));
+  } else {
+    const databaseEvent = await prisma.event.findUnique({ where: { id } });
+    if (!databaseEvent) redirect("/admin/events");
+    slug = databaseEvent.slug;
+    await upsertStoredEventBySlug(eventDataFromExisting(databaseEvent, submissionStatus));
+  }
+
+  revalidatePath("/");
+  revalidatePath("/events");
+  if (slug) revalidatePath(`/events/${slug}`);
+  revalidatePath("/admin/events");
+  redirect("/admin/events");
+}
+
 export async function deleteEventAction(id: number) {
   await requireAdmin();
+  const storedEvent = id < 0 ? (await getStoredEvents()).find((event) => event.id === id) : null;
   if (await deleteStoredEvent(id)) {
+    if (storedEvent) {
+      const databaseEvent = await prisma.event.findUnique({ where: { slug: storedEvent.slug } });
+      if (databaseEvent) await markDatabaseEventDeleted(storedEvent.slug);
+    }
     revalidatePath("/");
     revalidatePath("/events");
     revalidatePath("/admin/events");
@@ -305,9 +367,31 @@ export async function createAchievementAction(formData: FormData) {
   redirect("/admin/achievements");
 }
 
+function achievementData(formData: FormData) {
+  const date = dateOrNull(formString(formData, "date"));
+  return {
+    title: formString(formData, "title"),
+    description: formString(formData, "description"),
+    category: formString(formData, "category"),
+    year: Number(formString(formData, "year")) || new Date().getFullYear(),
+    date: date ? date.toISOString() : null,
+    imageUrl: formString(formData, "imageUrl"),
+    externalUrl: formString(formData, "externalUrl"),
+  };
+}
+
+export async function updateAchievementAction(id: number, formData: FormData) {
+  await requireAdmin();
+  await upsertStoredAchievement(id, achievementData(formData));
+  revalidatePath("/achievements");
+  revalidatePath("/admin/achievements");
+  redirect("/admin/achievements");
+}
+
 export async function deleteAchievementAction(id: number) {
   await requireAdmin();
   if (await deleteStoredAchievement(id)) {
+    await markDatabaseAchievementDeleted(id);
     revalidatePath("/achievements");
     revalidatePath("/admin/achievements");
     redirect("/admin/achievements");

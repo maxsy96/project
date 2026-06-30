@@ -1,6 +1,7 @@
-import { opportunityTypes, sectors, eventCategories, eventStatuses, achievementCategories } from "@/lib/constants";
+import { opportunityTypes, sectors, eventCategories, eventStatuses, achievementCategories, submissionStatuses } from "@/lib/constants";
 import { format } from "date-fns";
 import { fromJsonList } from "@/lib/utils";
+import { AdminImageField } from "@/components/admin-image-field";
 
 type Opportunity = {
   title?: string;
@@ -35,6 +36,17 @@ type EventItem = {
   registrationUrl?: string;
   imageUrl?: string;
   status?: string;
+  submissionStatus?: string;
+};
+
+type AchievementItem = {
+  title?: string;
+  description?: string;
+  category?: string;
+  year?: number;
+  date?: Date | null;
+  imageUrl?: string;
+  externalUrl?: string;
 };
 
 function Input({ name, label, defaultValue = "", type = "text", required = false }: { name: string; label: string; defaultValue?: string; type?: string; required?: boolean }) {
@@ -79,7 +91,7 @@ export function OpportunityAdminForm({ action, opportunity }: { action: (formDat
         <Input name="applicationUrl" label="Application URL" defaultValue={opportunity?.applicationUrl} />
         <Input name="contactEmail" label="Contact email" defaultValue={opportunity?.contactEmail} />
         <Input name="source" label="Source" defaultValue={opportunity?.source || "Admin"} />
-        <Input name="imageUrl" label="Image URL" defaultValue={opportunity?.imageUrl} />
+        <AdminImageField name="imageUrl" label="Image" defaultValue={opportunity?.imageUrl} />
         <label className="block text-sm font-semibold text-slate-800">
           Status
           <select name="status" defaultValue={opportunity?.status || "open"} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
@@ -135,11 +147,41 @@ export function EventAdminForm({ action, event }: { action: (formData: FormData)
           </select>
         </label>
         <Input name="organizer" label="Organizer" defaultValue={event?.organizer || "CAVM Club"} />
-        <Input name="registrationUrl" label="Registration URL" defaultValue={event?.registrationUrl} />
-        <Input name="imageUrl" label="Image URL" defaultValue={event?.imageUrl} />
+        <Input name="registrationUrl" label="External registration URL" defaultValue={event?.registrationUrl} />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="block text-sm font-semibold text-slate-800">
+          Submissions
+          <select name="submissionStatus" defaultValue={event?.submissionStatus || "open"} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
+            {submissionStatuses.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </label>
+        <AdminImageField name="imageUrl" label="Event image" defaultValue={event?.imageUrl} />
       </div>
       <TextArea name="description" label="Description" defaultValue={event?.description} required />
       <button className="rounded-md bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800">Save event</button>
+    </form>
+  );
+}
+
+export function AchievementAdminForm({ action, achievement }: { action: (formData: FormData) => void | Promise<void>; achievement?: AchievementItem }) {
+  return (
+    <form action={action} className="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Input name="title" label="Title" defaultValue={achievement?.title} required />
+        <Input name="year" label="Year" defaultValue={achievement?.year ? String(achievement.year) : ""} required />
+        <Input name="date" label="Date" type="date" defaultValue={dateInputValue(achievement?.date)} />
+      </div>
+      <label className="block text-sm font-semibold text-slate-800">
+        Category
+        <select name="category" defaultValue={achievement?.category || achievementCategories[0]} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
+          {achievementCategories.map((item) => <option key={item}>{item}</option>)}
+        </select>
+      </label>
+      <AdminImageField name="imageUrl" label="Achievement image" defaultValue={achievement?.imageUrl} />
+      <Input name="externalUrl" label="Related URL" defaultValue={achievement?.externalUrl} />
+      <TextArea name="description" label="Description" defaultValue={achievement?.description} required />
+      <button className="rounded-md bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800">Save achievement</button>
     </form>
   );
 }
@@ -154,8 +196,9 @@ export function SimpleContentForm({ kind, action }: { kind: "event" | "achieveme
           <div className="grid gap-4 md:grid-cols-3"><Input name="date" label="Date" type="date" required /><Input name="time" label="Time" required /><Input name="location" label="Location" required /></div>
           <label className="block text-sm font-semibold text-slate-800">Category<select name="category" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">{eventCategories.map((item) => <option key={item}>{item}</option>)}</select></label>
           <Input name="organizer" label="Organizer" defaultValue="CAVM Club" />
-          <Input name="registrationUrl" label="Registration URL" />
-          <Input name="imageUrl" label="Image URL" />
+          <Input name="registrationUrl" label="External registration URL" />
+          <label className="block text-sm font-semibold text-slate-800">Submissions<select name="submissionStatus" defaultValue="open" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">{submissionStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <AdminImageField name="imageUrl" label="Event image" />
           <label className="block text-sm font-semibold text-slate-800">Status<select name="status" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">{eventStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
           <TextArea name="description" label="Description" required />
         </>
@@ -164,8 +207,8 @@ export function SimpleContentForm({ kind, action }: { kind: "event" | "achieveme
         <>
           <Input name="title" label="Title" required />
           <div className="grid gap-4 md:grid-cols-3"><Input name="year" label="Year" required /><Input name="date" label="Date" type="date" /><label className="block text-sm font-semibold text-slate-800">Category<select name="category" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">{achievementCategories.map((item) => <option key={item}>{item}</option>)}</select></label></div>
-          <Input name="imageUrl" label="Image URL" />
-          <Input name="externalUrl" label="External URL" />
+          <AdminImageField name="imageUrl" label="Achievement image" />
+          <Input name="externalUrl" label="Related URL" />
           <TextArea name="description" label="Description" required />
         </>
       ) : null}
@@ -173,7 +216,7 @@ export function SimpleContentForm({ kind, action }: { kind: "event" | "achieveme
         <>
           <Input name="title" label="Title" required />
           <div className="grid gap-4 md:grid-cols-3"><Input name="category" label="Category" required /><Input name="mediaType" label="Media type" defaultValue="Image" /><Input name="date" label="Date" type="date" /></div>
-          <Input name="imageUrl" label="Image URL" />
+          <AdminImageField name="imageUrl" label="Media image" />
           <Input name="videoUrl" label="Video URL" />
           <TextArea name="description" label="Description" required />
         </>
@@ -183,7 +226,7 @@ export function SimpleContentForm({ kind, action }: { kind: "event" | "achieveme
           <div className="grid gap-4 md:grid-cols-2"><Input name="name" label="Name" required /><Input name="role" label="Role" required /></div>
           <div className="grid gap-4 md:grid-cols-2"><Input name="studentId" label="Student ID" /><Input name="email" label="UAEU email" type="email" /></div>
           <div className="grid gap-4 md:grid-cols-3"><Input name="committee" label="Committee" required /><Input name="areaOfInterest" label="Area of interest" required /><Input name="order" label="Order" /></div>
-          <Input name="imageUrl" label="Image URL" />
+          <AdminImageField name="imageUrl" label="Profile image" />
           <Input name="socialUrl" label="Social URL" />
           <TextArea name="bio" label="Bio" required />
         </>
@@ -192,7 +235,7 @@ export function SimpleContentForm({ kind, action }: { kind: "event" | "achieveme
         <>
           <div className="grid gap-4 md:grid-cols-2"><Input name="name" label="Name" required /><Input name="graduationYear" label="Graduation year" required /></div>
           <div className="grid gap-4 md:grid-cols-2"><Input name="currentRole" label="Current role" required /><Input name="sector" label="Sector" required /></div>
-          <Input name="imageUrl" label="Image URL" />
+          <AdminImageField name="imageUrl" label="Alumni image" />
           <Input name="socialUrl" label="LinkedIn/social URL" />
           <TextArea name="story" label="Story" required />
           <TextArea name="advice" label="Advice" required />

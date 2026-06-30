@@ -8,7 +8,7 @@ import { getDeletedEventSlugs, getStoredEventBySlug, storedEventToView } from "@
 import { ButtonLink, PageHero, Pill, StatusBadge } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { getArchiveManifest } from "@/lib/archive";
-import { isActiveEventStatus } from "@/lib/event-utils";
+import { isEventSubmissionOpen } from "@/lib/event-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +51,8 @@ export default async function EventDetailPage({
   const event = storedEvent ? storedEventToView(storedEvent) : deletedEventSlugs.includes(slug) ? null : databaseEvent;
   if (!event) notFound();
   const albums = archive.albums.filter((album) => album.eventSlug === event.slug);
-  const registrationOpen = isActiveEventStatus(event.status);
+  const submissionStatus = event.submissionStatus || "open";
+  const registrationOpen = isEventSubmissionOpen(event.status, submissionStatus);
 
   return (
     <>
@@ -62,6 +63,7 @@ export default async function EventDetailPage({
             <StatusBadge status={event.status} />
           </div>
           <p className="mt-4 text-sm text-slate-600">{event.time} - {event.location}</p>
+          <p className="mt-3 text-xs font-semibold uppercase text-emerald-700">Submissions: {submissionStatus}</p>
         </div>
       </PageHero>
       <section className="mx-auto grid max-w-7xl gap-8 px-5 py-14 md:grid-cols-[1fr_360px] md:px-8">
@@ -77,6 +79,7 @@ export default async function EventDetailPage({
             <div><dt className="text-sm font-semibold text-slate-500">Expected duration</dt><dd className="mt-1 font-medium">{eventDurationLabel(event.category, event.title, event.description)}</dd></div>
             <div><dt className="text-sm font-semibold text-slate-500">Location</dt><dd className="mt-1 font-medium">{event.location}</dd></div>
             <div><dt className="text-sm font-semibold text-slate-500">Organizer</dt><dd className="mt-1 font-medium">{event.organizer}</dd></div>
+            <div><dt className="text-sm font-semibold text-slate-500">Submissions</dt><dd className="mt-1 font-medium capitalize">{submissionStatus}</dd></div>
           </dl>
         </article>
         <aside className="h-fit rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -84,7 +87,12 @@ export default async function EventDetailPage({
           <p className="mt-2 text-sm leading-6 text-slate-600">Submit your details and CAVM Club will receive them directly for event follow-up.</p>
           {registered === "1" ? (
             <p className="mt-4 rounded-md bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
-              Registration received. The club team has your details.
+              Thank you for submitting. The CAVM Team will be in touch.
+            </p>
+          ) : null}
+          {registered === "closed" ? (
+            <p className="mt-4 rounded-md bg-amber-50 p-3 text-sm font-semibold text-amber-800">
+              Submissions are closed for this event.
             </p>
           ) : null}
           {registered === "error" ? (
@@ -127,7 +135,7 @@ export default async function EventDetailPage({
             </form>
           ) : (
             <div className="mt-5">
-              <p className="rounded-md bg-slate-100 p-3 text-sm font-semibold text-slate-700">Registration is closed for this event.</p>
+              <p className="rounded-md bg-slate-100 p-3 text-sm font-semibold text-slate-700">Submissions are closed for this event.</p>
               <div className="mt-4">
                 <ButtonLink href="/register-interest" variant="secondary">Register future interests</ButtonLink>
               </div>

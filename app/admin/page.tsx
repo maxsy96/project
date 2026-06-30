@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/auth";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getDeletedEventSlugs, getStoredEvents, storedEventToView } from "@/lib/admin-content-store";
 import {
@@ -49,7 +50,7 @@ export default async function AdminOverviewPage() {
           ["Registered students", students.length],
           ["Partner submissions", partnerSubmissions.length],
         ].map(([label, value]) => (
-          <div key={label as string} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div key={label as string} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md">
             <p className="text-sm font-semibold text-slate-500">{label as string}</p>
             <p className="mt-2 text-3xl font-semibold text-slate-950">{value as number}</p>
           </div>
@@ -60,10 +61,10 @@ export default async function AdminOverviewPage() {
           <h2 className="text-lg font-semibold text-slate-950">Upcoming events</h2>
           <div className="mt-4 grid gap-3">
             {upcomingEvents.map((event) => (
-              <div key={event.id} className="flex items-center justify-between gap-4 rounded-md bg-slate-50 p-3">
+              <Link key={event.id} href={`/admin/events/${event.id}/edit`} className="flex items-center justify-between gap-4 rounded-md bg-slate-50 p-3 transition hover:bg-emerald-50">
                 <div><p className="font-medium">{event.title}</p><p className="text-sm text-slate-500">{formatDate(event.date)}</p></div>
                 <StatusBadge status={event.status} />
-              </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -71,10 +72,10 @@ export default async function AdminOverviewPage() {
           <h2 className="text-lg font-semibold text-slate-950">Recent messages</h2>
           <div className="mt-4 grid gap-3">
             {latestMessages.map((message) => (
-              <div key={message.id} className="rounded-md bg-slate-50 p-3">
+              <Link key={message.id} href="/admin/contact-submissions" className="block rounded-md bg-slate-50 p-3 transition hover:bg-emerald-50">
                 <p className="font-medium">{message.subject}</p>
                 <p className="text-sm text-slate-500">{message.name} - {message.status}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

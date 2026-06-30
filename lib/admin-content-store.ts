@@ -20,6 +20,7 @@ export type StoredEvent = {
   registrationUrl: string;
   imageUrl: string;
   status: string;
+  submissionStatus: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -57,10 +58,24 @@ function cleanContent(value: unknown): AdminContent {
 
   const content = value as Partial<AdminContent>;
   return {
-    events: Array.isArray(content.events) ? content.events : [],
-    achievements: Array.isArray(content.achievements) ? content.achievements : [],
+    events: Array.isArray(content.events) ? content.events.map(normalizeStoredEvent) : [],
+    achievements: Array.isArray(content.achievements) ? content.achievements.map(normalizeStoredAchievement) : [],
     deletedEventSlugs: Array.isArray(content.deletedEventSlugs) ? content.deletedEventSlugs : [],
     deletedAchievementIds: Array.isArray(content.deletedAchievementIds) ? content.deletedAchievementIds : [],
+  };
+}
+
+function normalizeStoredEvent(event: StoredEvent): StoredEvent {
+  return {
+    ...event,
+    submissionStatus: event.submissionStatus || (event.status === "upcoming" || event.status === "closing soon" ? "open" : "closed"),
+  };
+}
+
+function normalizeStoredAchievement(achievement: StoredAchievement): StoredAchievement {
+  return {
+    ...achievement,
+    externalUrl: achievement.externalUrl || "",
   };
 }
 
@@ -239,6 +254,26 @@ export async function createStoredAchievement(achievement: Omit<StoredAchievemen
   return storedAchievement;
 }
 
+export async function upsertStoredAchievement(id: number, achievement: Omit<StoredAchievement, "id" | "createdAt">) {
+  const content = await readAdminContent();
+  const index = content.achievements.findIndex((item) => item.id === id);
+  const storedAchievement: StoredAchievement = {
+    ...achievement,
+    id,
+    createdAt: index >= 0 ? content.achievements[index].createdAt : new Date().toISOString(),
+  };
+
+  if (index >= 0) {
+    content.achievements[index] = storedAchievement;
+  } else {
+    content.achievements = [storedAchievement, ...content.achievements];
+  }
+
+  content.deletedAchievementIds = content.deletedAchievementIds.filter((item) => item !== id);
+  await writeAdminContent(content);
+  return storedAchievement;
+}
+
 export async function deleteStoredAchievement(id: number) {
   const content = await readAdminContent();
   const nextAchievements = content.achievements.filter((achievement) => achievement.id !== id);
@@ -260,7 +295,7 @@ export async function markDatabaseAchievementDeleted(id: number) {
 
 export function storedEventToView(event: StoredEvent) {
   return {
-    ...event,
+    ...normalizeStoredEvent(event),
     date: new Date(event.date),
     createdAt: new Date(event.createdAt),
     updatedAt: new Date(event.updatedAt),
@@ -269,7 +304,7 @@ export function storedEventToView(event: StoredEvent) {
 
 export function storedAchievementToView(achievement: StoredAchievement) {
   return {
-    ...achievement,
+    ...normalizeStoredAchievement(achievement),
     date: achievement.date ? new Date(achievement.date) : null,
     createdAt: new Date(achievement.createdAt),
   };

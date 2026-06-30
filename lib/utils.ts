@@ -62,8 +62,12 @@ export function matchScore(
   opportunitySectors: string[],
   opportunityType: string,
 ) {
-  const sectorMatches = opportunitySectors.filter((sector) => studentSectors.includes(sector)).length;
-  const typeMatch = studentTypes.includes(opportunityType) || studentTypes.includes(`${opportunityType}s`);
+  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/s$/, "");
+  const studentSectorSet = new Set(studentSectors.map(normalize));
+  const studentTypeSet = new Set(studentTypes.map(normalize));
+  const sectorMatches = opportunitySectors.filter((sector) => studentSectorSet.has(normalize(sector))).length;
+  const normalizedOpportunityType = normalize(opportunityType);
+  const typeMatch = studentTypeSet.has(normalizedOpportunityType) || Array.from(studentTypeSet).some((type) => type.includes(normalizedOpportunityType) || normalizedOpportunityType.includes(type));
   if (sectorMatches > 0 && typeMatch) return "Strong match";
   if (sectorMatches > 0) return "Good match";
   if (typeMatch) return "Possible match";

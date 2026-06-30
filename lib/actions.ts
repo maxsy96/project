@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { getDeletedEventSlugs, getStoredEventBySlug, storedEventToView } from "@/lib/admin-content-store";
+import { isEventSubmissionOpen } from "@/lib/event-utils";
+import { prisma } from "@/lib/prisma";
 import { formList, formString, slugify, toJsonList } from "@/lib/utils";
 import { queueNotification } from "@/lib/notifications";
 import {
@@ -213,7 +216,7 @@ export async function partnerSubmissionAction(_state: ActionState, formData: For
   );
 
   revalidatePath("/admin/partner-submissions");
-  return { ok: true, message: "Thank you. Your opportunity was saved for CAVM Club review." };
+  return { ok: true, message: "Thank you for submitting. The CAVM Team will be in touch." };
 }
 
 export async function contactAction(_state: ActionState, formData: FormData): Promise<ActionState> {
@@ -241,14 +244,19 @@ export async function contactAction(_state: ActionState, formData: FormData): Pr
   );
   revalidatePath("/admin/contact-submissions");
 
-  return { ok: true, message: "Message received. The club team can follow up from the admin dashboard." };
+  return { ok: true, message: "Thank you for submitting. The CAVM Team will be in touch." };
 }
 
 export async function interestedAction(formData: FormData) {
   const opportunityTitle = formString(formData, "opportunityTitle");
-  const name = formString(formData, "name") || "Interested student";
+  const opportunitySlug = formString(formData, "opportunitySlug");
+  const name = formString(formData, "name");
   const email = formString(formData, "email");
   const message = formString(formData, "message") || `A student clicked interested for ${opportunityTitle}.`;
+
+  if (!name || !email || !opportunitySlug) {
+    redirect(opportunitySlug ? `/opportunities/${opportunitySlug}?submitted=error` : "/opportunities?submitted=error");
+  }
 
   await createContactSubmission({
     name,
@@ -267,7 +275,17 @@ export async function interestedAction(formData: FormData) {
     ],
   );
   revalidatePath("/admin/contact-submissions");
-  redirect("/contact?sent=interest");
+  redirect(`/opportunities/${opportunitySlug}?submitted=1`);
+}
+
+async function getEventBySlugForSubmission(slug: string) {
+  const [databaseEvent, storedEvent, deletedEventSlugs] = await Promise.all([
+    prisma.event.findUnique({ where: { slug } }),
+    getStoredEventBySlug(slug),
+    getDeletedEventSlugs(),
+  ]);
+  if (deletedEventSlugs.includes(slug)) return null;
+  return storedEvent ? storedEventToView(storedEvent) : databaseEvent;
 }
 
 export async function eventRegistrationAction(formData: FormData) {
@@ -283,6 +301,11 @@ export async function eventRegistrationAction(formData: FormData) {
 
   if (!parsed.success) {
     redirect(`/events/${formString(formData, "eventSlug")}?registered=error`);
+  }
+
+  const event = await getEventBySlugForSubmission(parsed.data.eventSlug);
+  if (!event || !isEventSubmissionOpen(event.status, event.submissionStatus || "open")) {
+    redirect(`/events/${parsed.data.eventSlug}?registered=closed`);
   }
 
   const message = parsed.data.message || `Registration request for ${parsed.data.eventTitle}.`;

@@ -85,6 +85,12 @@ export const eventStatuses = [
   "cancelled",
 ] as const;
 
+export const submissionStatuses = [
+  "open",
+  "closing soon",
+  "closed",
+] as const;
+
 export const officialLinks = [
   { label: "Instagram", href: "https://www.instagram.com/cavmclub.uaeu", note: "Club updates and highlights" },
   { label: "TikTok", href: "https://www.tiktok.com/@cavmclub.uaeu", note: "Short videos and student moments" },

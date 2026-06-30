@@ -36,6 +36,7 @@ type EventSeed = {
   location: string;
   category: string;
   status: string;
+  submissionStatus?: string;
   imageUrl: string;
   description: string;
   organizer?: string;
@@ -918,6 +919,7 @@ async function main() {
       location: event.location,
       category: event.category,
       status: event.status,
+      submissionStatus: event.submissionStatus || (event.status === "upcoming" || event.status === "closing soon" ? "open" : "closed"),
       imageUrl: event.imageUrl,
       description: event.description,
       organizer: event.organizer || "CAVM Club",

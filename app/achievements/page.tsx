@@ -17,9 +17,10 @@ export default async function AchievementsPage() {
     getDeletedAchievementIds(),
   ]);
   const deleted = new Set(deletedAchievementIds);
+  const storedIds = new Set(storedAchievements.map((achievement) => achievement.id));
   const achievements = [
     ...storedAchievements.map(storedAchievementToView),
-    ...databaseAchievements.filter((achievement) => !deleted.has(achievement.id)),
+    ...databaseAchievements.filter((achievement) => !deleted.has(achievement.id) && !storedIds.has(achievement.id)),
   ].sort((a, b) => b.year - a.year || b.createdAt.getTime() - a.createdAt.getTime());
   alumni.sort((a, b) => Number(b.graduationYear) - Number(a.graduationYear));
 

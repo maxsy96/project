@@ -41,7 +41,7 @@ export function AdminShell({ title, children }: { title: string; children: React
       </aside>
       <main>
         <div className="mb-6">
-          <p className="text-sm font-semibold uppercase text-emerald-700">Protected workspace</p>
+          <p className="text-sm font-semibold uppercase text-emerald-700">CAVM Club Admin</p>
           <h1 className="mt-2 text-3xl font-semibold text-slate-950">{title}</h1>
         </div>
         {children}

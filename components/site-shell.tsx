@@ -40,12 +40,21 @@ export function Navbar() {
           ))}
         </nav>
 
-        <Link
-          href="/register-interest"
-          className="hidden shrink-0 rounded-md bg-slate-950 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 md:inline-flex lg:px-4 lg:text-sm"
-        >
-          Register Interest
-        </Link>
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <Link
+            href="/register-interest"
+            className="rounded-md bg-slate-950 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 lg:px-4 lg:text-sm"
+          >
+            Register Interest
+          </Link>
+          <Link
+            href="/ar"
+            className="rounded-md border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50 lg:text-sm"
+            lang="ar"
+          >
+            العربية
+          </Link>
+        </div>
 
         <details className="relative md:hidden">
           <summary className="flex cursor-pointer list-none items-center rounded-md border border-slate-200 p-2 text-slate-700">
@@ -63,6 +72,13 @@ export function Navbar() {
               className="mt-2 block rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800"
             >
               Register Interest
+            </Link>
+            <Link
+              href="/ar"
+              className="mt-2 block rounded-md border border-emerald-200 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50"
+              lang="ar"
+            >
+              العربية
             </Link>
           </div>
         </details>

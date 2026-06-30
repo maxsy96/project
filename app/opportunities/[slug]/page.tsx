@@ -52,8 +52,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: opportunity?.title ?? "Opportunity" };
 }
 
-export default async function OpportunityDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function OpportunityDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ submitted?: string }>;
+}) {
   const { slug } = await params;
+  const { submitted } = await searchParams;
   const opportunity = await getOpportunityBySlug(slug);
   if (!opportunity || opportunity.approvalStatus !== "approved") notFound();
   const sectorList = fromJsonList(opportunity.sectors);
@@ -115,14 +122,25 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           </div>
           <form action={interestedAction} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <input type="hidden" name="opportunityTitle" value={opportunity.title} />
+            <input type="hidden" name="opportunitySlug" value={opportunity.slug} />
             <h2 className="text-lg font-semibold text-slate-950">I&apos;m Interested</h2>
+            {submitted === "1" ? (
+              <p className="mt-3 rounded-md bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
+                Thank you for submitting. The CAVM Team will be in touch.
+              </p>
+            ) : null}
+            {submitted === "error" ? (
+              <p className="mt-3 rounded-md bg-red-50 p-3 text-sm font-semibold text-red-800">
+                Please enter your name and a valid email address.
+              </p>
+            ) : null}
             <label className="mt-4 block text-sm font-semibold text-slate-800">
               Email
               <input name="email" type="email" required className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
             </label>
             <label className="mt-4 block text-sm font-semibold text-slate-800">
               Name
-              <input name="name" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
+              <input name="name" required className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
             </label>
             <label className="mt-4 block text-sm font-semibold text-slate-800">
               Message

@@ -71,6 +71,7 @@ model Event {
   registrationUrl String   @default("")
   imageUrl        String   @default("")
   status          String   @default("upcoming")
+  submissionStatus String   @default("open")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

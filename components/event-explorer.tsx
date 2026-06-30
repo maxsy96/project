@@ -16,6 +16,7 @@ type EventItem = {
   category: string;
   imageUrl: string;
   status: string;
+  submissionStatus?: string;
 };
 
 export function EventExplorer({ events }: { events: EventItem[] }) {

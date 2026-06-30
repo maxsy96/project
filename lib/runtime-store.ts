@@ -196,6 +196,10 @@ function serializeDates<T extends Record<string, unknown>>(item: T): T {
   ) as T;
 }
 
+function isQaRecordText(...values: Array<string | null | undefined>) {
+  return values.some((value) => value?.toLowerCase().includes("codex qa student browser"));
+}
+
 async function getBlobStore() {
   try {
     const { getStore } = await import("@netlify/blobs");
@@ -366,7 +370,7 @@ export async function getAllStudentInterests() {
   return [
     ...content.studentInterests.map(studentToView),
     ...databaseStudents.map((student) => studentToView(serializeDates(student as unknown as StoredStudentInterest))),
-  ];
+  ].filter((student) => !isQaRecordText(student.fullName, student.email, student.goals));
 }
 
 export async function getStudentInterestById(id: number) {
@@ -508,7 +512,7 @@ export async function getAllContactSubmissions() {
     ...databaseMessages
       .filter((message) => !deleted.has(message.id) && !runtimeById.has(message.id))
       .map((message) => contactToView(serializeDates(message as unknown as StoredContactSubmission))),
-  ];
+  ].filter((message) => !isQaRecordText(message.name, message.email, message.subject, message.message));
 }
 
 export async function updateContactStatus(id: number, status: string) {

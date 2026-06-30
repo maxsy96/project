@@ -68,6 +68,7 @@ type EventLike = {
   category: string;
   imageUrl: string;
   status: string;
+  submissionStatus?: string;
 };
 
 export function EventCard({ event }: { event: EventLike }) {
@@ -86,6 +87,7 @@ export function EventCard({ event }: { event: EventLike }) {
         <div className="mt-4 grid gap-2 text-sm text-slate-600">
           <span>{formatDate(event.date)} at {event.time}</span>
           <span>{event.location}</span>
+          {event.submissionStatus ? <span className="font-semibold text-slate-800">Submissions: {event.submissionStatus}</span> : null}
         </div>
         <Link href={`/events/${event.slug}`} className="mt-5 inline-flex text-sm font-semibold text-emerald-700">
           Event details
