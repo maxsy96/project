@@ -9,7 +9,7 @@ import {
   requireAdmin,
 } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/audit-log";
-import { appendAlbumUploads } from "@/lib/album-uploads";
+import { appendAlbumUploads, removeAlbumPhoto } from "@/lib/album-uploads";
 import { getArchiveManifest } from "@/lib/archive";
 import { imageUrlFromFormData } from "@/lib/uploaded-images";
 import {
@@ -503,6 +503,47 @@ export async function addAlbumPhotosAction(formData: FormData) {
   revalidatePath("/admin/media");
   revalidatePath("/admin/audit-log");
   redirect("/admin/media");
+}
+
+async function resolveAlbumRemovalTarget(key: string) {
+  const archive = await getArchiveManifest();
+  const album = archive.albums.find((item) => item.eventSlug === key || item.slug === key);
+  if (!album) return null;
+
+  return {
+    slug: album.slug,
+    title: album.title,
+    eventSlug: album.eventSlug || album.slug,
+    date: album.date,
+    description: album.description,
+    category: album.category,
+    photos: album.photos,
+  };
+}
+
+export async function removeAlbumPhotoAction(formData: FormData) {
+  await requireAdmin();
+  const target = await resolveAlbumRemovalTarget(formString(formData, "albumKey"));
+  const photoSrc = formString(formData, "photoSrc");
+  if (!target || !photoSrc) redirect("/admin/media#album-manager");
+
+  const photo = target.photos.find((item) => item.src === photoSrc);
+  await removeAlbumPhoto({ ...target, photoSrc });
+  await logAuditEvent({
+    action: "removed album photo",
+    entityType: "Media album",
+    entityName: target.title,
+    details: {
+      eventSlug: target.eventSlug,
+      albumSlug: target.slug,
+      photo: photo?.originalName || photoSrc,
+    },
+  });
+  revalidatePath("/media");
+  if (target.eventSlug) revalidatePath(`/events/${target.eventSlug}`);
+  revalidatePath("/admin/media");
+  revalidatePath("/admin/audit-log");
+  redirect(`/admin/media#album-${target.slug}`);
 }
 
 export async function updateEventSubmissionStatusAction(id: number, submissionStatus: string) {

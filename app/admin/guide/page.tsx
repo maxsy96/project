@@ -80,6 +80,7 @@ const sections = [
       "Use Achievements for club accomplishments, official visits, exhibitions, initiatives, awards, and public activities.",
       "Use Media for curated archive entries and important photo or video items.",
       "At the top of Media, use Add photos to an event album to append many photos to an existing album without changing the card image.",
+      "Use Album manager in Media to open an album, preview each thumbnail, open the full photo, and remove a photo from the public album if it does not belong.",
       "Use Members for committee names, roles, IDs, generated UAEU emails, committees, and profile information.",
       "Use Alumni for graduate stories, current roles, sectors, advice, career pathways, profile photos, and LinkedIn links.",
       "Use the image picker to select existing site photos, upload an image from a phone or computer, paste a trusted image path, or clear an image.",

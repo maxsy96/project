@@ -1,4 +1,4 @@
-import { addAlbumPhotosAction, createMediaAction, deleteMediaAction } from "@/lib/admin-actions";
+import { addAlbumPhotosAction, createMediaAction, deleteMediaAction, removeAlbumPhotoAction } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
 import { getArchiveManifest } from "@/lib/archive";
 import { getStoredEvents } from "@/lib/admin-content-store";
@@ -7,6 +7,7 @@ import { getAllMediaItems } from "@/lib/runtime-store";
 import { formatDate } from "@/lib/utils";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminTable, AdminTd, AdminTh } from "@/components/admin-table";
+import { AdminAlbumManager } from "@/components/admin-album-manager";
 import { AlbumPhotosAdminForm, SimpleContentForm, type AlbumTarget } from "@/components/admin-forms";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,7 @@ export default async function AdminMediaPage() {
     <AdminShell title="Media Management">
       <div className="grid gap-6">
         <AlbumPhotosAdminForm action={addAlbumPhotosAction} targets={albumTargets} />
+        <AdminAlbumManager albums={archive.albums} removeAction={removeAlbumPhotoAction} />
         <SimpleContentForm kind="media" action={createMediaAction} />
         <AdminTable>
           <thead><tr><AdminTh>Media</AdminTh><AdminTh>Type</AdminTh><AdminTh>Actions</AdminTh></tr></thead>

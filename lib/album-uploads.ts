@@ -19,6 +19,7 @@ export type UploadedAlbum = {
   mediaType: string;
   category: string;
   photos: ArchivePhoto[];
+  removedPhotoSrcs: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -31,6 +32,16 @@ type AlbumUploadInput = {
   description: string;
   category: string;
   files: FormDataEntryValue[];
+};
+
+type AlbumPhotoRemovalInput = {
+  slug?: string;
+  title: string;
+  eventSlug: string;
+  date: string;
+  description: string;
+  category: string;
+  photoSrc: string;
 };
 
 function isUploadedFile(value: FormDataEntryValue): value is File {
@@ -59,6 +70,7 @@ function cleanAlbum(value: unknown): UploadedAlbum | null {
     mediaType: album.mediaType || "Photos",
     category: album.category || "Admin uploads",
     photos: Array.isArray(album.photos) ? album.photos : [],
+    removedPhotoSrcs: Array.isArray(album.removedPhotoSrcs) ? album.removedPhotoSrcs : [],
     createdAt: album.createdAt || new Date().toISOString(),
     updatedAt: album.updatedAt || new Date().toISOString(),
   };
@@ -139,6 +151,7 @@ export async function appendAlbumUploads(input: AlbumUploadInput) {
       description: input.description || existing.description,
       category: input.category || existing.category,
       photos: [...existing.photos, ...uploadedPhotos],
+      removedPhotoSrcs: existing.removedPhotoSrcs,
       updatedAt: now,
     };
     albums[index] = updated;
@@ -156,6 +169,54 @@ export async function appendAlbumUploads(input: AlbumUploadInput) {
     mediaType: "Photos",
     category: input.category,
     photos: uploadedPhotos,
+    removedPhotoSrcs: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await writeUploadedAlbums([album, ...albums]);
+  return album;
+}
+
+export async function removeAlbumPhoto(input: AlbumPhotoRemovalInput) {
+  if (!input.photoSrc) return null;
+
+  const now = new Date().toISOString();
+  const albumSlug = normalizeSlug(input.slug || input.eventSlug || input.title);
+  const albums = await getUploadedAlbums();
+  const index = albums.findIndex((album) => album.slug === albumSlug || album.eventSlug === input.eventSlug);
+
+  if (index >= 0) {
+    const existing = albums[index];
+    const removed = new Set(existing.removedPhotoSrcs);
+    removed.add(input.photoSrc);
+    const updated: UploadedAlbum = {
+      ...existing,
+      title: input.title || existing.title,
+      eventSlug: input.eventSlug || existing.eventSlug,
+      date: input.date || existing.date,
+      description: input.description || existing.description,
+      category: input.category || existing.category,
+      photos: existing.photos.filter((photo) => photo.src !== input.photoSrc),
+      removedPhotoSrcs: Array.from(removed),
+      updatedAt: now,
+    };
+    albums[index] = updated;
+    await writeUploadedAlbums(albums);
+    return updated;
+  }
+
+  const album: UploadedAlbum = {
+    slug: albumSlug,
+    title: input.title,
+    eventSlug: input.eventSlug,
+    date: input.date,
+    description: input.description,
+    sources: ["Admin uploads"],
+    mediaType: "Photos",
+    category: input.category,
+    photos: [],
+    removedPhotoSrcs: [input.photoSrc],
     createdAt: now,
     updatedAt: now,
   };
@@ -165,6 +226,8 @@ export async function appendAlbumUploads(input: AlbumUploadInput) {
 }
 
 function toArchiveAlbum(album: UploadedAlbum): ArchiveAlbum {
+  const removed = new Set(album.removedPhotoSrcs);
+  const photos = album.photos.filter((photo) => !removed.has(photo.src));
   return {
     slug: album.slug,
     title: album.title,
@@ -174,9 +237,9 @@ function toArchiveAlbum(album: UploadedAlbum): ArchiveAlbum {
     sources: album.sources,
     mediaType: album.mediaType,
     category: album.category,
-    photos: album.photos,
-    photoCount: album.photos.length,
-    coverImage: album.photos[0]?.src || "",
+    photos,
+    photoCount: photos.length,
+    coverImage: photos[0]?.src || "",
   };
 }
 
@@ -185,13 +248,18 @@ export function mergeUploadedAlbums(archive: ArchiveManifest, uploadedAlbums: Up
 
   for (const uploaded of uploadedAlbums) {
     const index = albums.findIndex((album) => album.eventSlug === uploaded.eventSlug || album.slug === uploaded.slug);
+    const removed = new Set(uploaded.removedPhotoSrcs);
     if (index >= 0) {
       const existing = albums[index];
-      const mergedPhotos = [...existing.photos, ...uploaded.photos];
+      const mergedPhotos = [
+        ...existing.photos.filter((photo) => !removed.has(photo.src)),
+        ...uploaded.photos.filter((photo) => !removed.has(photo.src)),
+      ];
       albums[index] = {
         ...existing,
         photos: mergedPhotos,
         photoCount: mergedPhotos.length,
+        coverImage: mergedPhotos[0]?.src || "",
         sources: Array.from(new Set([...existing.sources, ...uploaded.sources])),
       };
     } else {
