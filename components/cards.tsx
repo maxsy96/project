@@ -134,6 +134,7 @@ export function PersonCard({
   body,
   imageUrl,
   contact,
+  socialUrl,
 }: {
   name: string;
   role: string;
@@ -141,6 +142,7 @@ export function PersonCard({
   body: string;
   imageUrl?: string;
   contact?: string;
+  socialUrl?: string;
 }) {
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -155,6 +157,11 @@ export function PersonCard({
       <h3 className="mt-2 text-xl font-semibold text-slate-950">{name}</h3>
       <p className="mt-1 text-sm text-slate-500">{meta}</p>
       {contact ? <p className="mt-2 break-all text-xs font-semibold text-emerald-700">{contact}</p> : null}
+      {socialUrl ? (
+        <Link href={socialUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-900">
+          LinkedIn <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      ) : null}
       <p className="mt-4 text-sm leading-6 text-slate-600">{body}</p>
     </article>
   );

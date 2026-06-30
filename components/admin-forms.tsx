@@ -2,6 +2,7 @@ import { opportunityTypes, sectors, eventCategories, eventStatuses, achievementC
 import { format } from "date-fns";
 import { fromJsonList } from "@/lib/utils";
 import { AdminImageField } from "@/components/admin-image-field";
+import { AdminAlbumUploadField } from "@/components/admin-album-upload-field";
 
 type Opportunity = {
   title?: string;
@@ -47,6 +48,36 @@ type AchievementItem = {
   date?: Date | null;
   imageUrl?: string;
   externalUrl?: string;
+};
+
+type MemberItem = {
+  name?: string;
+  studentId?: string;
+  email?: string;
+  role?: string;
+  committee?: string;
+  areaOfInterest?: string;
+  bio?: string;
+  imageUrl?: string;
+  socialUrl?: string;
+  order?: number;
+};
+
+type AlumniItem = {
+  name?: string;
+  graduationYear?: string;
+  currentRole?: string;
+  sector?: string;
+  story?: string;
+  advice?: string;
+  imageUrl?: string;
+  socialUrl?: string;
+};
+
+export type AlbumTarget = {
+  key: string;
+  title: string;
+  meta: string;
 };
 
 function Input({ name, label, defaultValue = "", type = "text", required = false }: { name: string; label: string; defaultValue?: string; type?: string; required?: boolean }) {
@@ -156,8 +187,9 @@ export function EventAdminForm({ action, event }: { action: (formData: FormData)
             {submissionStatuses.map((item) => <option key={item}>{item}</option>)}
           </select>
         </label>
-        <AdminImageField name="imageUrl" label="Event image" defaultValue={event?.imageUrl} />
+        <AdminImageField name="imageUrl" label="Event card image" defaultValue={event?.imageUrl} />
       </div>
+      <AdminAlbumUploadField label="Add photos to this event album" />
       <TextArea name="description" label="Description" defaultValue={event?.description} required />
       <button className="rounded-md bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800">Save event</button>
     </form>
@@ -186,6 +218,69 @@ export function AchievementAdminForm({ action, achievement }: { action: (formDat
   );
 }
 
+export function MemberAdminForm({ action, member }: { action: (formData: FormData) => void | Promise<void>; member?: MemberItem }) {
+  return (
+    <form action={action} className="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="grid gap-4 md:grid-cols-2">
+        <Input name="name" label="Name" defaultValue={member?.name} required />
+        <Input name="role" label="Role" defaultValue={member?.role} required />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Input name="studentId" label="Student ID" defaultValue={member?.studentId} />
+        <Input name="email" label="UAEU email" type="email" defaultValue={member?.email} />
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Input name="committee" label="Committee" defaultValue={member?.committee} required />
+        <Input name="areaOfInterest" label="Area of interest" defaultValue={member?.areaOfInterest} required />
+        <Input name="order" label="Order" defaultValue={member?.order !== undefined ? String(member.order) : ""} />
+      </div>
+      <AdminImageField name="imageUrl" label="Profile image" defaultValue={member?.imageUrl} />
+      <Input name="socialUrl" label="LinkedIn URL" defaultValue={member?.socialUrl} />
+      <TextArea name="bio" label="Bio" defaultValue={member?.bio} required />
+      <button className="rounded-md bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800">Save member</button>
+    </form>
+  );
+}
+
+export function AlumniAdminForm({ action, person }: { action: (formData: FormData) => void | Promise<void>; person?: AlumniItem }) {
+  return (
+    <form action={action} className="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="grid gap-4 md:grid-cols-2">
+        <Input name="name" label="Name" defaultValue={person?.name} required />
+        <Input name="graduationYear" label="Graduation year" defaultValue={person?.graduationYear} required />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Input name="currentRole" label="Current role" defaultValue={person?.currentRole} required />
+        <Input name="sector" label="Sector" defaultValue={person?.sector} required />
+      </div>
+      <AdminImageField name="imageUrl" label="Alumni image" defaultValue={person?.imageUrl} />
+      <Input name="socialUrl" label="LinkedIn URL" defaultValue={person?.socialUrl} />
+      <TextArea name="story" label="Story" defaultValue={person?.story} required />
+      <TextArea name="advice" label="Advice" defaultValue={person?.advice} required />
+      <button className="rounded-md bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800">Save alumni profile</button>
+    </form>
+  );
+}
+
+export function AlbumPhotosAdminForm({ action, targets }: { action: (formData: FormData) => void | Promise<void>; targets: AlbumTarget[] }) {
+  return (
+    <form action={action} className="grid gap-4 rounded-lg border border-emerald-200 bg-emerald-50/60 p-5 shadow-sm">
+      <h2 className="text-lg font-semibold text-slate-950">Add photos to an event album</h2>
+      <label className="block text-sm font-semibold text-slate-800">
+        Album
+        <select name="albumTarget" required className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
+          <option value="">Choose an event album</option>
+          {targets.map((target) => (
+            <option key={target.key} value={target.key}>{target.title} - {target.meta}</option>
+          ))}
+        </select>
+      </label>
+      <AdminAlbumUploadField label="Photos to append" />
+      <button className="rounded-md bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800">Add photos to album</button>
+    </form>
+  );
+}
+
 export function SimpleContentForm({ kind, action }: { kind: "event" | "achievement" | "media" | "member" | "alumni"; action: (formData: FormData) => void | Promise<void> }) {
   return (
     <form action={action} className="grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -198,7 +293,8 @@ export function SimpleContentForm({ kind, action }: { kind: "event" | "achieveme
           <Input name="organizer" label="Organizer" defaultValue="CAVM Club" />
           <Input name="registrationUrl" label="External registration URL" />
           <label className="block text-sm font-semibold text-slate-800">Submissions<select name="submissionStatus" defaultValue="open" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">{submissionStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <AdminImageField name="imageUrl" label="Event image" />
+          <AdminImageField name="imageUrl" label="Event card image" />
+          <AdminAlbumUploadField label="Add photos to this event album" />
           <label className="block text-sm font-semibold text-slate-800">Status<select name="status" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">{eventStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
           <TextArea name="description" label="Description" required />
         </>
@@ -227,7 +323,7 @@ export function SimpleContentForm({ kind, action }: { kind: "event" | "achieveme
           <div className="grid gap-4 md:grid-cols-2"><Input name="studentId" label="Student ID" /><Input name="email" label="UAEU email" type="email" /></div>
           <div className="grid gap-4 md:grid-cols-3"><Input name="committee" label="Committee" required /><Input name="areaOfInterest" label="Area of interest" required /><Input name="order" label="Order" /></div>
           <AdminImageField name="imageUrl" label="Profile image" />
-          <Input name="socialUrl" label="Social URL" />
+          <Input name="socialUrl" label="LinkedIn URL" />
           <TextArea name="bio" label="Bio" required />
         </>
       ) : null}
@@ -236,7 +332,7 @@ export function SimpleContentForm({ kind, action }: { kind: "event" | "achieveme
           <div className="grid gap-4 md:grid-cols-2"><Input name="name" label="Name" required /><Input name="graduationYear" label="Graduation year" required /></div>
           <div className="grid gap-4 md:grid-cols-2"><Input name="currentRole" label="Current role" required /><Input name="sector" label="Sector" required /></div>
           <AdminImageField name="imageUrl" label="Alumni image" />
-          <Input name="socialUrl" label="LinkedIn/social URL" />
+          <Input name="socialUrl" label="LinkedIn URL" />
           <TextArea name="story" label="Story" required />
           <TextArea name="advice" label="Advice" required />
         </>

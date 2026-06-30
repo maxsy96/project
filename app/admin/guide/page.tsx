@@ -49,6 +49,7 @@ const sections = [
       "Submission status controls whether students can register: open, closing soon, or closed.",
       "Set submissions to closed when registration is full, the deadline passed, or the activity should no longer accept names.",
       "Use Edit to update event date, time, location, image, description, category, organizer, public status, and submission status.",
+      "Use Event card image for the public card and hero image. Use Add photos to this event album when you want photos to appear inside the Media album.",
     ],
   },
   {
@@ -78,8 +79,9 @@ const sections = [
     items: [
       "Use Achievements for club accomplishments, official visits, exhibitions, initiatives, awards, and public activities.",
       "Use Media for curated archive entries and important photo or video items.",
+      "At the top of Media, use Add photos to an event album to append many photos to an existing album without changing the card image.",
       "Use Members for committee names, roles, IDs, generated UAEU emails, committees, and profile information.",
-      "Use Alumni for graduate stories, current roles, sectors, advice, and career pathways.",
+      "Use Alumni for graduate stories, current roles, sectors, advice, career pathways, profile photos, and LinkedIn links.",
       "Use the image picker to select existing site photos, upload an image from a phone or computer, paste a trusted image path, or clear an image.",
       "Uploaded images can be JPG, PNG, WebP, or GIF files up to 8 MB.",
       "Keep photos matched to their real event or album. Do not reuse unrelated event photos.",

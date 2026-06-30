@@ -49,6 +49,7 @@ export default async function AchievementsPage() {
               meta={`${person.graduationYear} - ${person.sector}`}
               body={`${person.story} Advice: ${person.advice}`}
               imageUrl={person.imageUrl}
+              socialUrl={person.socialUrl}
             />
           ))}
         </div>

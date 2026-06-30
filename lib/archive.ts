@@ -1,5 +1,6 @@
 import { readFile } from "fs/promises";
 import path from "path";
+import { getUploadedAlbums, mergeUploadedAlbums } from "@/lib/album-uploads";
 
 export type ArchivePhoto = {
   src: string;
@@ -44,13 +45,16 @@ const emptyArchive: ArchiveManifest = {
 };
 
 export async function getArchiveManifest(): Promise<ArchiveManifest> {
+  let archive = emptyArchive;
   try {
     const manifestPath = path.join(process.cwd(), "public", "images", "archive", "archive-manifest.json");
     const raw = await readFile(manifestPath, "utf8");
-    return JSON.parse(raw) as ArchiveManifest;
+    archive = JSON.parse(raw) as ArchiveManifest;
   } catch {
-    return emptyArchive;
+    archive = emptyArchive;
   }
+
+  return mergeUploadedAlbums(archive, await getUploadedAlbums());
 }
 
 export function formatFileSize(bytes: number) {

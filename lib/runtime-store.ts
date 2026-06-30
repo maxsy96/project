@@ -569,19 +569,46 @@ export async function getAllMembers(includeInactive = true) {
     prisma.member.findMany(),
     readRuntimeContent(),
   ]);
+  const runtimeById = new Map(content.members.map((member) => [member.id, member]));
   const deleted = new Set(content.deletedMemberIds);
   return [
     ...content.members.map(memberToView),
     ...databaseMembers
-      .filter((member) => !deleted.has(member.id))
+      .filter((member) => !deleted.has(member.id) && !runtimeById.has(member.id))
       .map((member) => memberToView(serializeDates(member as unknown as StoredMember))),
   ].filter((member) => includeInactive || member.isActive);
+}
+
+export async function getMemberById(id: number) {
+  const members = await getAllMembers();
+  return members.find((member) => member.id === id) ?? null;
 }
 
 export async function createMember(data: Omit<StoredMember, "id" | "createdAt">) {
   const content = await readRuntimeContent();
   const stored: StoredMember = { ...data, id: nextNegativeId(content.members), createdAt: new Date().toISOString() };
   content.members = [stored, ...content.members];
+  await writeRuntimeContent(content);
+  return memberToView(stored);
+}
+
+export async function saveMember(data: Omit<StoredMember, "id" | "createdAt">, id?: number) {
+  const content = await readRuntimeContent();
+  const existingIndex = id ? content.members.findIndex((member) => member.id === id) : -1;
+  const existing = existingIndex >= 0 ? content.members[existingIndex] : null;
+  const stored: StoredMember = {
+    ...data,
+    id: id ?? nextNegativeId(content.members),
+    createdAt: existing?.createdAt ?? new Date().toISOString(),
+  };
+
+  if (existingIndex >= 0) {
+    content.members[existingIndex] = stored;
+  } else {
+    content.members = [stored, ...content.members];
+  }
+
+  content.deletedMemberIds = content.deletedMemberIds.filter((item) => item !== stored.id);
   await writeRuntimeContent(content);
   return memberToView(stored);
 }
@@ -598,19 +625,46 @@ export async function getAllAlumni() {
     prisma.alumni.findMany(),
     readRuntimeContent(),
   ]);
+  const runtimeById = new Map(content.alumni.map((person) => [person.id, person]));
   const deleted = new Set(content.deletedAlumniIds);
   return [
     ...content.alumni.map(alumniToView),
     ...databaseAlumni
-      .filter((person) => !deleted.has(person.id))
+      .filter((person) => !deleted.has(person.id) && !runtimeById.has(person.id))
       .map((person) => alumniToView(serializeDates(person as unknown as StoredAlumni))),
   ];
+}
+
+export async function getAlumniById(id: number) {
+  const alumni = await getAllAlumni();
+  return alumni.find((person) => person.id === id) ?? null;
 }
 
 export async function createAlumni(data: Omit<StoredAlumni, "id" | "createdAt">) {
   const content = await readRuntimeContent();
   const stored: StoredAlumni = { ...data, id: nextNegativeId(content.alumni), createdAt: new Date().toISOString() };
   content.alumni = [stored, ...content.alumni];
+  await writeRuntimeContent(content);
+  return alumniToView(stored);
+}
+
+export async function saveAlumni(data: Omit<StoredAlumni, "id" | "createdAt">, id?: number) {
+  const content = await readRuntimeContent();
+  const existingIndex = id ? content.alumni.findIndex((person) => person.id === id) : -1;
+  const existing = existingIndex >= 0 ? content.alumni[existingIndex] : null;
+  const stored: StoredAlumni = {
+    ...data,
+    id: id ?? nextNegativeId(content.alumni),
+    createdAt: existing?.createdAt ?? new Date().toISOString(),
+  };
+
+  if (existingIndex >= 0) {
+    content.alumni[existingIndex] = stored;
+  } else {
+    content.alumni = [stored, ...content.alumni];
+  }
+
+  content.deletedAlumniIds = content.deletedAlumniIds.filter((item) => item !== stored.id);
   await writeRuntimeContent(content);
   return alumniToView(stored);
 }

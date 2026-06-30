@@ -9,6 +9,8 @@ import {
   requireAdmin,
 } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/audit-log";
+import { appendAlbumUploads } from "@/lib/album-uploads";
+import { getArchiveManifest } from "@/lib/archive";
 import { imageUrlFromFormData } from "@/lib/uploaded-images";
 import {
   createStoredAchievement,
@@ -42,6 +44,8 @@ import {
   getOpportunityById,
   getPartnerSubmissionById,
   approvePartnerSubmissionWithOpportunity,
+  saveAlumni,
+  saveMember,
   saveOpportunity,
   updateContactStatus,
   updateOpportunityStatus,
@@ -55,6 +59,18 @@ function dateOrNull(value: string) {
 
 function bool(formData: FormData, key: string) {
   return formString(formData, key) === "on";
+}
+
+function isUploadedFile(value: FormDataEntryValue): value is File {
+  return Boolean(value && typeof value === "object" && "arrayBuffer" in value && "size" in value && "name" in value);
+}
+
+function albumPhotoEntries(formData: FormData) {
+  return formData.getAll("albumPhotos");
+}
+
+function albumPhotoCount(entries: FormDataEntryValue[]) {
+  return entries.filter((entry) => isUploadedFile(entry) && entry.size > 0).length;
 }
 
 async function uniqueOpportunitySlug(title: string, currentId?: number) {
@@ -314,15 +330,17 @@ export async function createEventAction(formData: FormData) {
   await requireAdmin();
   const data = await eventData(formData, await uniqueEventSlug(formString(formData, "title")));
   const event = await createStoredEvent(data);
+  const photosAdded = await appendEventAlbumPhotos(data, formData);
   await logAuditEvent({
     action: "created event",
     entityType: "Event",
     entityId: event.id,
     entityName: event.title,
-    details: { status: event.status, submissions: event.submissionStatus },
+    details: { status: event.status, submissions: event.submissionStatus, photosAdded },
   });
   revalidatePath("/");
   revalidatePath("/events");
+  revalidatePath("/media");
   revalidatePath("/admin/events");
   revalidatePath("/admin/audit-log");
   redirect("/admin/events");
@@ -345,6 +363,24 @@ async function eventData(formData: FormData, slug: string) {
     status: formString(formData, "status") || "upcoming",
     submissionStatus: formString(formData, "submissionStatus") || "open",
   };
+}
+
+async function appendEventAlbumPhotos(data: Awaited<ReturnType<typeof eventData>>, formData: FormData) {
+  const files = albumPhotoEntries(formData);
+  const photosAdded = albumPhotoCount(files);
+  if (!photosAdded) return 0;
+
+  await appendAlbumUploads({
+    slug: data.slug,
+    title: data.title,
+    eventSlug: data.slug,
+    date: data.date.slice(0, 10),
+    description: data.description,
+    category: data.category,
+    files,
+  });
+
+  return photosAdded;
 }
 
 type ExistingEvent = {
@@ -398,19 +434,75 @@ export async function updateEventAction(id: number, formData: FormData) {
     await upsertStoredEventBySlug(data);
   }
 
+  const photosAdded = data ? await appendEventAlbumPhotos(data, formData) : 0;
   await logAuditEvent({
     action: "updated event",
     entityType: "Event",
     entityId: id,
     entityName: data?.title || "",
-    details: { status: data?.status || "", submissions: data?.submissionStatus || "" },
+    details: { status: data?.status || "", submissions: data?.submissionStatus || "", photosAdded },
   });
   revalidatePath("/");
   revalidatePath("/events");
+  revalidatePath("/media");
   if (slug) revalidatePath(`/events/${slug}`);
   revalidatePath("/admin/events");
   revalidatePath("/admin/audit-log");
   redirect("/admin/events");
+}
+
+async function resolveAlbumUploadTarget(key: string) {
+  const archive = await getArchiveManifest();
+  const album = archive.albums.find((item) => item.eventSlug === key || item.slug === key);
+  if (album) {
+    return {
+      slug: album.slug,
+      title: album.title,
+      eventSlug: album.eventSlug || album.slug,
+      date: album.date,
+      description: album.description,
+      category: album.category,
+    };
+  }
+
+  const [storedEvents, databaseEvent] = await Promise.all([
+    getStoredEvents(),
+    prisma.event.findUnique({ where: { slug: key } }),
+  ]);
+  const storedEvent = storedEvents.find((event) => event.slug === key);
+  const event = storedEvent || databaseEvent;
+  if (!event) return null;
+
+  const date = event.date instanceof Date ? event.date.toISOString() : event.date;
+  return {
+    slug: event.slug,
+    title: event.title,
+    eventSlug: event.slug,
+    date: date.slice(0, 10),
+    description: event.description,
+    category: event.category,
+  };
+}
+
+export async function addAlbumPhotosAction(formData: FormData) {
+  await requireAdmin();
+  const target = await resolveAlbumUploadTarget(formString(formData, "albumTarget"));
+  const files = albumPhotoEntries(formData);
+  const photosAdded = albumPhotoCount(files);
+  if (!target || !photosAdded) redirect("/admin/media");
+
+  const album = await appendAlbumUploads({ ...target, files });
+  await logAuditEvent({
+    action: "added album photos",
+    entityType: "Media album",
+    entityName: target.title,
+    details: { eventSlug: target.eventSlug, photosAdded, albumSlug: album?.slug || target.slug },
+  });
+  revalidatePath("/media");
+  if (target.eventSlug) revalidatePath(`/events/${target.eventSlug}`);
+  revalidatePath("/admin/media");
+  revalidatePath("/admin/audit-log");
+  redirect("/admin/media");
 }
 
 export async function updateEventSubmissionStatusAction(id: number, submissionStatus: string) {
@@ -616,9 +708,24 @@ export async function deleteMediaAction(id: number) {
 
 export async function createMemberAction(formData: FormData) {
   await requireAdmin();
+  const member = await createMember(await memberData(formData));
+  await logAuditEvent({
+    action: "created member",
+    entityType: "Member",
+    entityId: member.id,
+    entityName: member.name,
+    details: { role: member.role, committee: member.committee },
+  });
+  revalidatePath("/members");
+  revalidatePath("/admin/members");
+  revalidatePath("/admin/audit-log");
+  redirect("/admin/members");
+}
+
+async function memberData(formData: FormData) {
   const studentId = formString(formData, "studentId");
   const email = formString(formData, "email") || (studentId ? `${studentId}@uaeu.ac.ae` : "");
-  const member = await createMember({
+  return {
     name: formString(formData, "name"),
     studentId,
     email,
@@ -630,9 +737,14 @@ export async function createMemberAction(formData: FormData) {
     socialUrl: formString(formData, "socialUrl"),
     order: Number(formString(formData, "order")) || 0,
     isActive: true,
-  });
+  };
+}
+
+export async function updateMemberAction(id: number, formData: FormData) {
+  await requireAdmin();
+  const member = await saveMember(await memberData(formData), id);
   await logAuditEvent({
-    action: "created member",
+    action: "updated member",
     entityType: "Member",
     entityId: member.id,
     entityName: member.name,
@@ -663,7 +775,23 @@ export async function deleteMemberAction(id: number) {
 
 export async function createAlumniAction(formData: FormData) {
   await requireAdmin();
-  const person = await createAlumni({
+  const person = await createAlumni(await alumniData(formData));
+  await logAuditEvent({
+    action: "created alumni profile",
+    entityType: "Alumni",
+    entityId: person.id,
+    entityName: person.name,
+    details: { graduationYear: person.graduationYear, currentRole: person.currentRole },
+  });
+  revalidatePath("/achievements");
+  revalidatePath("/alumni");
+  revalidatePath("/admin/alumni");
+  revalidatePath("/admin/audit-log");
+  redirect("/admin/alumni");
+}
+
+async function alumniData(formData: FormData) {
+  return {
     name: formString(formData, "name"),
     graduationYear: formString(formData, "graduationYear"),
     currentRole: formString(formData, "currentRole"),
@@ -672,14 +800,20 @@ export async function createAlumniAction(formData: FormData) {
     advice: formString(formData, "advice"),
     imageUrl: await imageUrlFromFormData(formData),
     socialUrl: formString(formData, "socialUrl"),
-  });
+  };
+}
+
+export async function updateAlumniAction(id: number, formData: FormData) {
+  await requireAdmin();
+  const person = await saveAlumni(await alumniData(formData), id);
   await logAuditEvent({
-    action: "created alumni profile",
+    action: "updated alumni profile",
     entityType: "Alumni",
     entityId: person.id,
     entityName: person.name,
     details: { graduationYear: person.graduationYear, currentRole: person.currentRole },
   });
+  revalidatePath("/achievements");
   revalidatePath("/alumni");
   revalidatePath("/admin/alumni");
   revalidatePath("/admin/audit-log");
@@ -697,6 +831,7 @@ export async function deleteAlumniAction(id: number) {
     entityName: person?.name || "",
     details: { graduationYear: person?.graduationYear || "" },
   });
+  revalidatePath("/achievements");
   revalidatePath("/alumni");
   revalidatePath("/admin/alumni");
   revalidatePath("/admin/audit-log");

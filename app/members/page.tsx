@@ -33,6 +33,7 @@ export default async function MembersPage() {
                     body={member.bio}
                     imageUrl={member.imageUrl}
                     contact={member.email || member.studentId}
+                    socialUrl={member.socialUrl}
                   />
                 ))}
               </div>
