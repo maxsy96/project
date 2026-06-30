@@ -34,6 +34,7 @@ export function AdminImageField({
   defaultValue?: string;
 }) {
   const [value, setValue] = useState(defaultValue);
+  const [uploadName, setUploadName] = useState("");
 
   return (
     <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
@@ -69,6 +70,22 @@ export function AdminImageField({
           Clear image
         </button>
       </div>
+      <label className="mt-3 block rounded-md border border-dashed border-emerald-300 bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">
+        Upload from phone or computer
+        <input
+          name={`${name}File`}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            setUploadName(file?.name || "");
+          }}
+          className="mt-2 block w-full text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-700 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-emerald-800"
+        />
+        <span className="mt-2 block text-xs font-medium text-emerald-800">
+          {uploadName ? `${uploadName} will replace the selected path when you save.` : "JPG, PNG, WebP, or GIF. Maximum 8 MB."}
+        </span>
+      </label>
       {value && value.startsWith("/") ? (
         <div className="mt-3 overflow-hidden rounded-md border border-slate-200 bg-white">
           <Image src={value} alt="" width={700} height={360} className="h-36 w-full object-cover" />

@@ -9,6 +9,7 @@ import {
   requireAdmin,
 } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/audit-log";
+import { imageUrlFromFormData } from "@/lib/uploaded-images";
 import {
   createStoredAchievement,
   createStoredEvent,
@@ -104,7 +105,7 @@ export async function adminLoginAction(_state: { message: string }, formData: Fo
   redirect("/admin");
 }
 
-function opportunityData(formData: FormData) {
+async function opportunityData(formData: FormData) {
   const title = formString(formData, "title");
   return {
     title,
@@ -125,7 +126,7 @@ function opportunityData(formData: FormData) {
     contactEmail: formString(formData, "contactEmail"),
     status: formString(formData, "status") || "open",
     source: formString(formData, "source") || "Admin",
-    imageUrl: formString(formData, "imageUrl"),
+    imageUrl: await imageUrlFromFormData(formData),
     submittedByPartner: false,
     approvalStatus: "approved",
   };
@@ -133,7 +134,7 @@ function opportunityData(formData: FormData) {
 
 export async function createOpportunityAction(formData: FormData) {
   await requireAdmin();
-  const data = opportunityData(formData);
+  const data = await opportunityData(formData);
   const saved = await saveOpportunity({
     ...data,
     slug: await uniqueOpportunitySlug(data.title),
@@ -153,7 +154,7 @@ export async function createOpportunityAction(formData: FormData) {
 
 export async function updateOpportunityAction(id: number, formData: FormData) {
   await requireAdmin();
-  const data = opportunityData(formData);
+  const data = await opportunityData(formData);
   const saved = await saveOpportunity({
     ...data,
     slug: await uniqueOpportunitySlug(data.title, id),
@@ -311,7 +312,7 @@ export async function deleteContactAction(id: number) {
 
 export async function createEventAction(formData: FormData) {
   await requireAdmin();
-  const data = eventData(formData, await uniqueEventSlug(formString(formData, "title")));
+  const data = await eventData(formData, await uniqueEventSlug(formString(formData, "title")));
   const event = await createStoredEvent(data);
   await logAuditEvent({
     action: "created event",
@@ -327,7 +328,7 @@ export async function createEventAction(formData: FormData) {
   redirect("/admin/events");
 }
 
-function eventData(formData: FormData, slug: string) {
+async function eventData(formData: FormData, slug: string) {
   const title = formString(formData, "title");
   const date = dateOrNull(formString(formData, "date")) ?? new Date();
   return {
@@ -340,7 +341,7 @@ function eventData(formData: FormData, slug: string) {
     category: formString(formData, "category"),
     organizer: formString(formData, "organizer") || "CAVM Club",
     registrationUrl: formString(formData, "registrationUrl"),
-    imageUrl: formString(formData, "imageUrl"),
+    imageUrl: await imageUrlFromFormData(formData),
     status: formString(formData, "status") || "upcoming",
     submissionStatus: formString(formData, "submissionStatus") || "open",
   };
@@ -381,19 +382,19 @@ function eventDataFromExisting(event: ExistingEvent, submissionStatus: string) {
 export async function updateEventAction(id: number, formData: FormData) {
   await requireAdmin();
   let slug = "";
-  let data: ReturnType<typeof eventData> | null = null;
+  let data: Awaited<ReturnType<typeof eventData>> | null = null;
 
   if (id < 0) {
     const storedEvents = await getStoredEvents();
     const existingSlug = storedEvents.find((event) => event.id === id)?.slug;
     slug = existingSlug ?? await uniqueEventSlug(formString(formData, "title"));
-    data = eventData(formData, slug);
+    data = await eventData(formData, slug);
     await updateStoredEvent(id, data);
   } else {
     const databaseEvent = await prisma.event.findUnique({ where: { id } });
     if (!databaseEvent) return;
     slug = databaseEvent.slug;
-    data = eventData(formData, slug);
+    data = await eventData(formData, slug);
     await upsertStoredEventBySlug(data);
   }
 
@@ -495,7 +496,7 @@ export async function createAchievementAction(formData: FormData) {
     category: formString(formData, "category"),
     year: Number(formString(formData, "year")) || new Date().getFullYear(),
     date: date ? date.toISOString() : null,
-    imageUrl: formString(formData, "imageUrl"),
+    imageUrl: await imageUrlFromFormData(formData),
     externalUrl: formString(formData, "externalUrl"),
   });
   await logAuditEvent({
@@ -511,7 +512,7 @@ export async function createAchievementAction(formData: FormData) {
   redirect("/admin/achievements");
 }
 
-function achievementData(formData: FormData) {
+async function achievementData(formData: FormData) {
   const date = dateOrNull(formString(formData, "date"));
   return {
     title: formString(formData, "title"),
@@ -519,14 +520,14 @@ function achievementData(formData: FormData) {
     category: formString(formData, "category"),
     year: Number(formString(formData, "year")) || new Date().getFullYear(),
     date: date ? date.toISOString() : null,
-    imageUrl: formString(formData, "imageUrl"),
+    imageUrl: await imageUrlFromFormData(formData),
     externalUrl: formString(formData, "externalUrl"),
   };
 }
 
 export async function updateAchievementAction(id: number, formData: FormData) {
   await requireAdmin();
-  const achievement = await upsertStoredAchievement(id, achievementData(formData));
+  const achievement = await upsertStoredAchievement(id, await achievementData(formData));
   await logAuditEvent({
     action: "updated achievement",
     entityType: "Achievement",
@@ -579,7 +580,7 @@ export async function createMediaAction(formData: FormData) {
     description: formString(formData, "description"),
     category: formString(formData, "category"),
     mediaType: formString(formData, "mediaType"),
-    imageUrl: formString(formData, "imageUrl"),
+    imageUrl: await imageUrlFromFormData(formData),
     videoUrl: formString(formData, "videoUrl"),
     date: dateOrNull(formString(formData, "date")),
   });
@@ -625,7 +626,7 @@ export async function createMemberAction(formData: FormData) {
     committee: formString(formData, "committee"),
     areaOfInterest: formString(formData, "areaOfInterest"),
     bio: formString(formData, "bio"),
-    imageUrl: formString(formData, "imageUrl"),
+    imageUrl: await imageUrlFromFormData(formData),
     socialUrl: formString(formData, "socialUrl"),
     order: Number(formString(formData, "order")) || 0,
     isActive: true,
@@ -669,7 +670,7 @@ export async function createAlumniAction(formData: FormData) {
     sector: formString(formData, "sector"),
     story: formString(formData, "story"),
     advice: formString(formData, "advice"),
-    imageUrl: formString(formData, "imageUrl"),
+    imageUrl: await imageUrlFromFormData(formData),
     socialUrl: formString(formData, "socialUrl"),
   });
   await logAuditEvent({

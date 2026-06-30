@@ -230,6 +230,8 @@ Rules:
 - Do not use photos from one event under another event.
 - Prefer high-quality group photos where students and activities are clear.
 - Avoid screenshots with visible social media carousel dots when a clean photo is available.
+- Admin image fields can upload JPG, PNG, WebP, or GIF files directly from a phone or computer.
+- Uploaded images can be up to 8 MB.
 
 ## 12. Members
 
