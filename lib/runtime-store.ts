@@ -421,6 +421,61 @@ export async function updatePartnerSubmissionStatus(id: number, approvalStatus: 
   return partnerToView(stored);
 }
 
+export async function approvePartnerSubmissionWithOpportunity(
+  id: number,
+  opportunity: Omit<StoredOpportunity, "id" | "createdAt" | "updatedAt">,
+) {
+  const content = await readRuntimeContent();
+  const now = new Date().toISOString();
+  const runtimeIndex = content.partnerSubmissions.findIndex((submission) => submission.id === id);
+  let submission = runtimeIndex >= 0 ? content.partnerSubmissions[runtimeIndex] : null;
+
+  if (!submission) {
+    const databaseSubmission = await prisma.partnerSubmission.findUnique({ where: { id } });
+    if (!databaseSubmission) return null;
+    submission = serializeDates(databaseSubmission as unknown as StoredPartnerSubmission);
+  }
+
+  const approvedSubmission = serializeDates({
+    ...submission,
+    approvalStatus: "approved",
+  } as unknown as StoredPartnerSubmission);
+
+  if (runtimeIndex >= 0) {
+    content.partnerSubmissions[runtimeIndex] = approvedSubmission;
+  } else {
+    content.partnerSubmissions = [approvedSubmission, ...content.partnerSubmissions];
+  }
+
+  const existingOpportunityIndex = content.opportunities.findIndex(
+    (item) =>
+      item.source === "Partner submission" &&
+      item.title === opportunity.title &&
+      item.contactEmail === opportunity.contactEmail,
+  );
+  const existingOpportunity = existingOpportunityIndex >= 0 ? content.opportunities[existingOpportunityIndex] : null;
+  const storedOpportunity: StoredOpportunity = {
+    ...opportunity,
+    id: existingOpportunity?.id ?? nextNegativeId(content.opportunities),
+    createdAt: existingOpportunity?.createdAt ?? now,
+    updatedAt: now,
+  };
+
+  if (existingOpportunityIndex >= 0) {
+    content.opportunities[existingOpportunityIndex] = storedOpportunity;
+  } else {
+    content.opportunities = [storedOpportunity, ...content.opportunities];
+  }
+
+  content.deletedOpportunityIds = content.deletedOpportunityIds.filter((item) => item !== storedOpportunity.id);
+  await writeRuntimeContent(content);
+
+  return {
+    submission: partnerToView(approvedSubmission),
+    opportunity: opportunityToView(storedOpportunity),
+  };
+}
+
 export async function deletePartnerSubmissionById(id: number) {
   const content = await readRuntimeContent();
   content.partnerSubmissions = content.partnerSubmissions.filter((submission) => submission.id !== id);

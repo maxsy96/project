@@ -1,4 +1,5 @@
 const fs = require("node:fs/promises");
+const { spawnSync } = require("node:child_process");
 const { createRequire } = require("node:module");
 const path = require("node:path");
 
@@ -51,6 +52,57 @@ async function folderSize(root) {
     }
   }
   return total;
+}
+
+function psSingleQuote(value) {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+function runCommand(command, args, options = {}) {
+  const result = spawnSync(command, args, { stdio: "inherit", ...options });
+  if (result.error) {
+    throw result.error;
+  }
+  if (result.status !== 0) {
+    throw new Error(`${command} exited with status ${result.status}`);
+  }
+}
+
+async function repackFunctionZip(functionRoot) {
+  const zipDir = path.join(process.cwd(), ".netlify", "functions");
+  const zipPath = path.join(zipDir, "___netlify-server-handler.zip");
+  await fs.mkdir(zipDir, { recursive: true });
+  await fs.rm(zipPath, { force: true });
+
+  if (process.platform === "win32") {
+    const script = [
+      "$ErrorActionPreference = 'Stop'",
+      "Add-Type -AssemblyName System.IO.Compression.FileSystem",
+      `[System.IO.Compression.ZipFile]::CreateFromDirectory(${psSingleQuote(functionRoot)}, ${psSingleQuote(
+        zipPath,
+      )}, [System.IO.Compression.CompressionLevel]::Optimal, $false)`,
+    ].join("; ");
+    runCommand("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script]);
+  } else {
+    const script = [
+      "import os, sys, zipfile",
+      "root, target = sys.argv[1], sys.argv[2]",
+      "with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:",
+      "    for dirpath, dirnames, filenames in os.walk(root):",
+      "        dirnames[:] = [d for d in dirnames if d != '__pycache__']",
+      "        for filename in filenames:",
+      "            full = os.path.join(dirpath, filename)",
+      "            archive.write(full, os.path.relpath(full, root))",
+    ].join("\n");
+    try {
+      runCommand("python3", ["-c", script, functionRoot, zipPath]);
+    } catch (error) {
+      runCommand("python", ["-c", script, functionRoot, zipPath]);
+    }
+  }
+
+  const zipStat = await fs.stat(zipPath);
+  console.log(`Repacked Netlify server function zip to about ${Math.round(zipStat.size / 1024 / 1024)} MB.`);
 }
 
 async function materializeSymlinks(root, nodeModules) {
@@ -232,6 +284,10 @@ async function trimFunctionPackage() {
     "react",
     "react-dom",
     "styled-jsx",
+    "@netlify/blobs",
+    "@netlify/dev-utils",
+    "@netlify/otel",
+    "@netlify/runtime-utils",
     "@prisma/client",
   ]) {
     await copyTopLevelPackage(nodeModules, packageName);
@@ -253,6 +309,7 @@ async function trimFunctionPackage() {
   const sizeMb = Math.round((await folderSize(functionRoot)) / 1024 / 1024);
   console.log(`Trimmed Netlify server function to about ${sizeMb} MB before upload.`);
   console.log(`Materialized ${materializedCount} function package symlinks.`);
+  await repackFunctionZip(functionRoot);
 }
 
 module.exports = {

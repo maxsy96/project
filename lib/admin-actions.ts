@@ -32,6 +32,7 @@ import {
   deletePartnerSubmissionById,
   getAllOpportunities,
   getPartnerSubmissionById,
+  approvePartnerSubmissionWithOpportunity,
   saveOpportunity,
   updateContactStatus,
   updateOpportunityStatus,
@@ -143,6 +144,7 @@ export async function deleteOpportunityAction(id: number) {
   await deleteOpportunityById(id);
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
+  redirect("/admin/opportunities");
 }
 
 export async function archiveOpportunityAction(id: number) {
@@ -150,14 +152,15 @@ export async function archiveOpportunityAction(id: number) {
   await updateOpportunityStatus(id, "closed");
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
+  redirect("/admin/opportunities");
 }
 
 export async function approvePartnerSubmissionAction(id: number) {
   await requireAdmin();
   const submission = await getPartnerSubmissionById(id);
-  if (!submission) return;
+  if (!submission) redirect("/admin/partner-submissions");
   const title = submission.opportunityTitle;
-  await saveOpportunity({
+  await approvePartnerSubmissionWithOpportunity(id, {
     title,
     slug: await uniqueOpportunitySlug(title),
     organization: submission.organizationName,
@@ -181,33 +184,38 @@ export async function approvePartnerSubmissionAction(id: number) {
     approvalStatus: "approved",
     imageUrl: "/images/events/cavm-event-09.jpg",
   });
-  await updatePartnerSubmissionStatus(id, "approved");
   revalidatePath("/opportunities");
   revalidatePath("/admin/partner-submissions");
+  revalidatePath("/admin/opportunities");
+  redirect("/admin/partner-submissions");
 }
 
 export async function rejectPartnerSubmissionAction(id: number) {
   await requireAdmin();
   await updatePartnerSubmissionStatus(id, "rejected");
   revalidatePath("/admin/partner-submissions");
+  redirect("/admin/partner-submissions");
 }
 
 export async function deletePartnerSubmissionAction(id: number) {
   await requireAdmin();
   await deletePartnerSubmissionById(id);
   revalidatePath("/admin/partner-submissions");
+  redirect("/admin/partner-submissions");
 }
 
 export async function markContactReadAction(id: number, status: string) {
   await requireAdmin();
   await updateContactStatus(id, status);
   revalidatePath("/admin/contact-submissions");
+  redirect("/admin/contact-submissions");
 }
 
 export async function deleteContactAction(id: number) {
   await requireAdmin();
   await deleteContactSubmissionById(id);
   revalidatePath("/admin/contact-submissions");
+  redirect("/admin/contact-submissions");
 }
 
 export async function createEventAction(formData: FormData) {
@@ -217,6 +225,7 @@ export async function createEventAction(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/events");
   revalidatePath("/admin/events");
+  redirect("/admin/events");
 }
 
 function eventData(formData: FormData, slug: string) {
@@ -266,7 +275,7 @@ export async function deleteEventAction(id: number) {
     revalidatePath("/");
     revalidatePath("/events");
     revalidatePath("/admin/events");
-    return;
+    redirect("/admin/events");
   }
 
   const databaseEvent = await prisma.event.findUnique({ where: { id } });
@@ -276,6 +285,7 @@ export async function deleteEventAction(id: number) {
   revalidatePath("/");
   revalidatePath("/events");
   revalidatePath("/admin/events");
+  redirect("/admin/events");
 }
 
 export async function createAchievementAction(formData: FormData) {
@@ -292,6 +302,7 @@ export async function createAchievementAction(formData: FormData) {
   });
   revalidatePath("/achievements");
   revalidatePath("/admin/achievements");
+  redirect("/admin/achievements");
 }
 
 export async function deleteAchievementAction(id: number) {
@@ -299,12 +310,13 @@ export async function deleteAchievementAction(id: number) {
   if (await deleteStoredAchievement(id)) {
     revalidatePath("/achievements");
     revalidatePath("/admin/achievements");
-    return;
+    redirect("/admin/achievements");
   }
 
   await markDatabaseAchievementDeleted(id);
   revalidatePath("/achievements");
   revalidatePath("/admin/achievements");
+  redirect("/admin/achievements");
 }
 
 export async function createMediaAction(formData: FormData) {
@@ -320,6 +332,7 @@ export async function createMediaAction(formData: FormData) {
   });
   revalidatePath("/media");
   revalidatePath("/admin/media");
+  redirect("/admin/media");
 }
 
 export async function deleteMediaAction(id: number) {
@@ -327,6 +340,7 @@ export async function deleteMediaAction(id: number) {
   await deleteMediaItemById(id);
   revalidatePath("/media");
   revalidatePath("/admin/media");
+  redirect("/admin/media");
 }
 
 export async function createMemberAction(formData: FormData) {
@@ -348,6 +362,7 @@ export async function createMemberAction(formData: FormData) {
   });
   revalidatePath("/members");
   revalidatePath("/admin/members");
+  redirect("/admin/members");
 }
 
 export async function deleteMemberAction(id: number) {
@@ -355,6 +370,7 @@ export async function deleteMemberAction(id: number) {
   await deleteMemberById(id);
   revalidatePath("/members");
   revalidatePath("/admin/members");
+  redirect("/admin/members");
 }
 
 export async function createAlumniAction(formData: FormData) {
@@ -371,6 +387,7 @@ export async function createAlumniAction(formData: FormData) {
   });
   revalidatePath("/alumni");
   revalidatePath("/admin/alumni");
+  redirect("/admin/alumni");
 }
 
 export async function deleteAlumniAction(id: number) {
@@ -378,4 +395,5 @@ export async function deleteAlumniAction(id: number) {
   await deleteAlumniById(id);
   revalidatePath("/alumni");
   revalidatePath("/admin/alumni");
+  redirect("/admin/alumni");
 }
