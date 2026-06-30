@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { interestedAction } from "@/lib/actions";
 import { getAllOpportunities, getOpportunityBySlug } from "@/lib/runtime-store";
+import { isOpportunityOpen } from "@/lib/opportunity-utils";
 import { fromJsonList, formatDate } from "@/lib/utils";
 import { ButtonLink, PageHero, Pill, StatusBadge } from "@/components/ui";
 import { OpportunityCard } from "@/components/cards";
@@ -63,6 +64,7 @@ export default async function OpportunityDetailPage({
   const { submitted } = await searchParams;
   const opportunity = await getOpportunityBySlug(slug);
   if (!opportunity || opportunity.approvalStatus !== "approved") notFound();
+  const acceptingSubmissions = isOpportunityOpen(opportunity.status);
   const sectorList = fromJsonList(opportunity.sectors);
   const related = (await getAllOpportunities())
     .filter((item) => item.approvalStatus === "approved" && item.id !== opportunity.id)
@@ -109,45 +111,67 @@ export default async function OpportunityDetailPage({
         </article>
         <aside className="grid h-fit gap-5">
           <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-950">Application instructions</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Use the external application link when available, or register your interests so CAVM Club can help match and follow up.</p>
-            <div className="mt-5 grid gap-3">
-              {opportunity.applicationUrl ? (
-                <a href={opportunity.applicationUrl} className="rounded-md bg-emerald-700 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-emerald-800">
-                  Apply externally
-                </a>
-              ) : null}
-              <ButtonLink href="/register-interest" variant="secondary">Register interests</ButtonLink>
-            </div>
+            <h2 className="text-lg font-semibold text-slate-950">{acceptingSubmissions ? "Application instructions" : "Submissions closed"}</h2>
+            {acceptingSubmissions ? (
+              <>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Use the external application link when available, or register your interests so CAVM Club can help match and follow up.</p>
+                <div className="mt-5 grid gap-3">
+                  {opportunity.applicationUrl ? (
+                    <a href={opportunity.applicationUrl} className="rounded-md bg-emerald-700 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-emerald-800">
+                      Apply externally
+                    </a>
+                  ) : null}
+                  <ButtonLink href="/register-interest" variant="secondary">Register interests</ButtonLink>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 rounded-md bg-slate-100 p-3 text-sm font-semibold text-slate-700">Submissions are closed for this opportunity.</p>
+                <div className="mt-5">
+                  <ButtonLink href="/register-interest" variant="secondary">Register future interests</ButtonLink>
+                </div>
+              </>
+            )}
           </div>
-          <form action={interestedAction} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <input type="hidden" name="opportunityTitle" value={opportunity.title} />
-            <input type="hidden" name="opportunitySlug" value={opportunity.slug} />
-            <h2 className="text-lg font-semibold text-slate-950">I&apos;m Interested</h2>
-            {submitted === "1" ? (
-              <p className="mt-3 rounded-md bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
-                Thank you for submitting. The CAVM Team will be in touch.
-              </p>
-            ) : null}
-            {submitted === "error" ? (
-              <p className="mt-3 rounded-md bg-red-50 p-3 text-sm font-semibold text-red-800">
-                Please enter your name and a valid email address.
-              </p>
-            ) : null}
-            <label className="mt-4 block text-sm font-semibold text-slate-800">
-              Email
-              <input name="email" type="email" required className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
-            </label>
-            <label className="mt-4 block text-sm font-semibold text-slate-800">
-              Name
-              <input name="name" required className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
-            </label>
-            <label className="mt-4 block text-sm font-semibold text-slate-800">
-              Message
-              <textarea name="message" rows={3} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
-            </label>
-            <button className="mt-4 w-full rounded-md bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Send interest</button>
-          </form>
+          {acceptingSubmissions ? (
+            <form action={interestedAction} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <input type="hidden" name="opportunityTitle" value={opportunity.title} />
+              <input type="hidden" name="opportunitySlug" value={opportunity.slug} />
+              <h2 className="text-lg font-semibold text-slate-950">I&apos;m Interested</h2>
+              {submitted === "1" ? (
+                <p className="mt-3 rounded-md bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
+                  Thank you for submitting. The CAVM Team will be in touch.
+                </p>
+              ) : null}
+              {submitted === "error" ? (
+                <p className="mt-3 rounded-md bg-red-50 p-3 text-sm font-semibold text-red-800">
+                  Please enter your name and a valid email address.
+                </p>
+              ) : null}
+              {submitted === "closed" ? (
+                <p className="mt-3 rounded-md bg-amber-50 p-3 text-sm font-semibold text-amber-800">
+                  Submissions are closed for this opportunity.
+                </p>
+              ) : null}
+              <label className="mt-4 block text-sm font-semibold text-slate-800">
+                Email
+                <input name="email" type="email" required className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
+              </label>
+              <label className="mt-4 block text-sm font-semibold text-slate-800">
+                Name
+                <input name="name" required className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
+              </label>
+              <label className="mt-4 block text-sm font-semibold text-slate-800">
+                Message
+                <textarea name="message" rows={3} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 text-sm" />
+              </label>
+              <button className="mt-4 w-full rounded-md bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Send interest</button>
+            </form>
+          ) : submitted === "closed" ? (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm font-semibold text-amber-800">
+              Submissions are closed for this opportunity.
+            </p>
+          ) : null}
         </aside>
       </section>
       <section className="mx-auto max-w-7xl px-5 pb-14 md:px-8">

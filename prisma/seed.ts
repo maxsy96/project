@@ -69,7 +69,7 @@ const opportunities: OpportunitySeed[] = [
     benefits: "Mentorship from marine scientists, access to industry labs and equipment, hands-on experience, and completion certificate.",
     applicationUrl: "/files/cavm-seaworld-internship.pdf",
     contactEmail: clubEmail,
-    status: "closing soon",
+    status: "closed",
     source: "CAVM @ SeaWorld proposal",
     imageUrl: "/images/external/seaworld-research-rescue.jpg",
   },
@@ -299,6 +299,7 @@ const events: EventSeed[] = [
     location: "Yas Island, Abu Dhabi",
     category: "Research",
     status: "upcoming",
+    submissionStatus: "closed",
     imageUrl: "/images/external/seaworld-research-rescue.jpg",
     description:
       "A four-week CAVM internship pathway at Yas SeaWorld Research & Rescue with marine ecology, aquaculture, rescue, rehabilitation, and lab exposure.",

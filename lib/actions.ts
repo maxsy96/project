@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getDeletedEventSlugs, getStoredEventBySlug, storedEventToView } from "@/lib/admin-content-store";
 import { isEventSubmissionOpen } from "@/lib/event-utils";
+import { isOpportunityOpen } from "@/lib/opportunity-utils";
 import { prisma } from "@/lib/prisma";
 import { formList, formString, slugify, toJsonList } from "@/lib/utils";
 import { queueNotification } from "@/lib/notifications";
@@ -13,6 +14,7 @@ import {
   createPartnerSubmission,
   createStudentInterest,
   getAllOpportunities,
+  getOpportunityBySlug,
 } from "@/lib/runtime-store";
 
 export type ActionState = {
@@ -254,8 +256,13 @@ export async function interestedAction(formData: FormData) {
   const email = formString(formData, "email");
   const message = formString(formData, "message") || `A student clicked interested for ${opportunityTitle}.`;
 
-  if (!name || !email || !opportunitySlug) {
+  if (!name || !email || !opportunitySlug || !emailSchema.safeParse(email).success) {
     redirect(opportunitySlug ? `/opportunities/${opportunitySlug}?submitted=error` : "/opportunities?submitted=error");
+  }
+
+  const opportunity = await getOpportunityBySlug(opportunitySlug);
+  if (!opportunity || !isOpportunityOpen(opportunity.status)) {
+    redirect(`/opportunities/${opportunitySlug}?submitted=closed`);
   }
 
   await createContactSubmission({
