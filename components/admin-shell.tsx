@@ -5,6 +5,7 @@ import { logAuditEvent } from "@/lib/audit-log";
 
 const adminLinks = [
   ["Overview", "/admin"],
+  ["Admin guide", "/admin/guide"],
   ["Opportunities", "/admin/opportunities"],
   ["Students", "/admin/students"],
   ["Events", "/admin/events"],

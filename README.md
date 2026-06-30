@@ -82,6 +82,7 @@ Admin login route:
 
 Main admin areas:
 
+- `/admin/guide`
 - `/admin/students`
 - `/admin/contact-submissions`
 - `/admin/partner-submissions`

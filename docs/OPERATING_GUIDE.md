@@ -1,18 +1,28 @@
-# CAVM Club Website Operating Guide
+# CAVM Club Admin Dashboard Guide
 
-This guide explains how CAVM Club admins operate the live website, review visitor submissions, update public content, and keep the project running as a real production application.
+This guide explains how CAVM Club admins operate the live website dashboard, review visitor submissions, update public content, close submissions, and keep a reliable record of admin changes.
 
-Live site: <https://cavm-opportunity-hub-uaeu-2026.netlify.app>
+Live site:
 
-## 1. Admin Access
+```text
+https://cavm-opportunity-hub-uaeu-2026.netlify.app
+```
 
-Admin page:
+Admin login:
 
 ```text
 https://cavm-opportunity-hub-uaeu-2026.netlify.app/admin/login
 ```
 
-Production credentials must be set in Netlify environment variables:
+In-dashboard guide:
+
+```text
+/admin/guide
+```
+
+## 1. Admin Access
+
+Production admin credentials are controlled by Netlify environment variables:
 
 ```text
 ADMIN_USERNAME
@@ -20,29 +30,290 @@ ADMIN_PASSWORD
 AUTH_SECRET
 ```
 
-Only trusted committee/admin members should receive the username and password. If the credentials are shared too widely, change `ADMIN_PASSWORD` in Netlify and redeploy.
+Only trusted committee/admin members should receive the username and password. If credentials are shared too widely, change `ADMIN_PASSWORD` in Netlify and redeploy. Always use Logout after finishing dashboard work on shared computers.
 
-Local development can use `.env` copied from `.env.example`.
+## 2. Dashboard Sections
 
-## 2. Where Visitor Forms Go
+| Dashboard page | Purpose |
+| --- | --- |
+| `/admin` | Overview of opportunities, students, partner submissions, recent messages, and upcoming events |
+| `/admin/guide` | Full admin guide inside the dashboard |
+| `/admin/opportunities` | Create, edit, close, archive, or delete student opportunities |
+| `/admin/students` | Review student interest registrations and export CSV |
+| `/admin/events` | Create activities, update event details, and open or close event submissions |
+| `/admin/achievements` | Manage club achievements and public highlights |
+| `/admin/media` | Add or remove curated media items |
+| `/admin/members` | Add or remove committee members |
+| `/admin/alumni` | Add or remove alumni stories |
+| `/admin/partner-submissions` | Review external partner opportunity proposals |
+| `/admin/contact-submissions` | Review contact messages, opportunity interests, and event registrations |
+| `/admin/audit-log` | Review admin login and content-change history |
 
-All important visitor actions have an admin review path.
+## 3. Where Visitor Forms Go
 
-| Visitor form | Admin page | What admins review |
+| Visitor action | Admin destination | What admins review |
 | --- | --- | --- |
 | Register Interest | `/admin/students` | Student name, ID, email, major, sectors, opportunity preferences, availability, and goals |
-| Partner With Us | `/admin/partner-submissions` | Organization details, contact person, opportunity proposal, sectors, deadline, and approval status |
-| Contact page | `/admin/contact-submissions` | Questions, media requests, collaboration messages, and general website messages |
+| Partner With Us | `/admin/partner-submissions` | Organization details, contact person, proposal details, sectors, deadline, and approval status |
+| Contact form | `/admin/contact-submissions` | Questions, media requests, collaboration messages, and general messages |
 | Opportunity interest | `/admin/contact-submissions` | Student name, email, target opportunity, and note |
 | Event registration | `/admin/contact-submissions` | Event title, student name, email, student ID, phone, and message |
 
-Email notifications can also be sent to `Clubcavm@gmail.com` when email delivery is configured.
+If email notifications are configured, submissions are also sent to `Clubcavm@gmail.com`. Even if email delivery is not configured, submissions are still saved inside the admin dashboard.
 
-## 3. Email Notifications
+## 4. Overview Workflow
 
-The website saves submissions in admin and can email the club inbox.
+Use `/admin` first when starting an admin session.
 
-Set these Netlify environment variables:
+1. Check total opportunities and open opportunities.
+2. Check registered students.
+3. Check partner submissions.
+4. Review recent messages.
+5. Review upcoming events and click an event if it needs editing.
+
+## 5. Student Interest Registrations
+
+Open:
+
+```text
+/admin/students
+```
+
+Use this page to review students who registered their interests.
+
+- Filter by sector, such as Veterinary Medicine, Agriculture, Food Science, Environment, Research, or Government Sector.
+- Filter by opportunity type, such as Internship, Volunteering, Farm Visit, Research Assistant Role, or Training Program.
+- Open top matches to see which current open opportunities fit each student.
+- Use Export CSV when the committee needs a spreadsheet for shortlisting, attendance, or reporting.
+
+Good routine:
+
+1. Filter students by the event or opportunity sector.
+2. Review top matches.
+3. Export CSV.
+4. Contact selected students from the exported list or email records.
+
+## 6. Opportunities
+
+Open:
+
+```text
+/admin/opportunities
+```
+
+Use this area for internships, volunteering roles, research assistant roles, farm visits, jobs, training programs, scholarships, competitions, conferences, government opportunities, and programs abroad.
+
+Opportunity statuses:
+
+| Status | Meaning |
+| --- | --- |
+| `open` | Students can apply or send interest |
+| `closing soon` | Deadline is near, but submissions are still accepted |
+| `closed` | Students should no longer submit interest or apply from the website |
+
+Admin workflow:
+
+1. Use Create opportunity for a new item.
+2. Fill title, organization, type, sectors, location, deadline, description, requirements, benefits, contact email, source, image, and status.
+3. Use Edit to update an existing item.
+4. Use Archive to close an opportunity without deleting it.
+5. Use Delete only if the opportunity should be removed from admin and public view.
+
+Important: closed opportunities must not show `Apply externally` or `Send interest` on the public opportunity page.
+
+## 7. Events And Activities
+
+Open:
+
+```text
+/admin/events
+```
+
+Events have two separate controls:
+
+| Control | What it affects |
+| --- | --- |
+| Event status | Public state of the event, such as upcoming, completed, cancelled, or closed |
+| Submission status | Whether students can register: open, closing soon, or closed |
+
+Use event status for the activity timeline. Use submission status for registrations.
+
+Recommended workflow:
+
+1. Create the event with title, date, time, location, category, image, description, organizer, event status, and submission status.
+2. Keep event status as `upcoming` while the activity is in the future.
+3. Set submission status to `open` while students can register.
+4. Set submission status to `closing soon` when the deadline is near.
+5. Set submission status to `closed` when registration is full, the deadline passed, or the activity should no longer accept names.
+6. After the event happens, update event status to `completed`.
+
+Important: if submission status is closed, the event page must not show a registration form or event registration link.
+
+## 8. Partner Submissions
+
+Open:
+
+```text
+/admin/partner-submissions
+```
+
+Use this page to review organizations that want to offer student opportunities.
+
+Actions:
+
+- Open submission: read the full proposal details.
+- Reply by email: contact the partner for clarification.
+- Approve: create a public opportunity from the partner submission.
+- Reject: mark the proposal rejected while keeping the record.
+- Delete: remove the submission if it should not stay in admin.
+
+Before approving, check:
+
+- Organization name and contact person.
+- Opportunity title and type.
+- Sectors.
+- Location.
+- Deadline.
+- Eligibility.
+- Application link.
+- Whether the opportunity is appropriate for CAVM students.
+
+## 9. Contact Messages And Event Registrations
+
+Open:
+
+```text
+/admin/contact-submissions
+```
+
+This page stores contact form messages, opportunity interest messages, and event registrations.
+
+Workflow:
+
+1. New/unread messages are highlighted.
+2. Click Open submission to read the full message.
+3. Use Reply by email for follow-up.
+4. Mark as Read after the message is handled.
+5. Mark as Unread if another admin still needs to review it.
+6. Delete only if the message is no longer needed.
+
+## 10. Achievements
+
+Open:
+
+```text
+/admin/achievements
+```
+
+Use this page for official visits, exhibitions, initiatives, awards, public activities, community service, and club highlights.
+
+Recommended workflow:
+
+1. Add title, category, year, date, description, image, and optional related link.
+2. Use images that match the achievement.
+3. Use Edit when correcting existing achievements.
+4. Use Delete only if the achievement should be removed from the public site.
+
+## 11. Media
+
+Open:
+
+```text
+/admin/media
+```
+
+Use Media for curated photos, videos, and archive highlights.
+
+Rules:
+
+- Keep every photo connected to the correct event or album.
+- Do not use photos from one event under another event.
+- Prefer high-quality group photos where students and activities are clear.
+- Avoid screenshots with visible social media carousel dots when a clean photo is available.
+
+## 12. Members
+
+Open:
+
+```text
+/admin/members
+```
+
+Use Members for current committee information.
+
+Fields:
+
+- Name.
+- Student ID.
+- Email.
+- Role.
+- Committee.
+- Area of interest.
+- Bio.
+- Image.
+- Social link.
+- Display order.
+
+If an email is not entered, the dashboard can generate a UAEU-style email from the student ID in the member form workflow.
+
+## 13. Alumni
+
+Open:
+
+```text
+/admin/alumni
+```
+
+Use Alumni for graduate stories and role models.
+
+Include:
+
+- Name.
+- Graduation year.
+- Current role.
+- Sector.
+- Story.
+- Advice.
+- Image.
+- Social or professional link if approved.
+
+## 14. Audit Log
+
+Open:
+
+```text
+/admin/audit-log
+```
+
+The audit log records important admin activity:
+
+- Login, failed login, and logout.
+- Opportunity create, edit, close, and delete.
+- Event create, edit, delete, and submission-status changes.
+- Achievement create, edit, and delete.
+- Media create and delete.
+- Member create and delete.
+- Alumni create and delete.
+- Partner submission approve, reject, and delete.
+- Contact message read, unread, and delete.
+
+Use filters to narrow the log by section. Open details to see saved context such as item name, status, submission state, or organization.
+
+## 15. Safe Admin Rules
+
+- Check public pages after important edits.
+- Do not delete records unless the committee no longer needs them.
+- Close submissions before an event deadline if registration should stop.
+- Keep photos matched to their actual event.
+- Do not share admin credentials publicly.
+- Use the audit log when checking who made a change.
+- Export important student lists before closing or deleting related activities.
+
+## 16. Email Notifications
+
+Submissions are saved in the dashboard. Email delivery is optional but recommended.
+
+Netlify variables:
 
 ```text
 RESEND_API_KEY
@@ -50,139 +321,30 @@ CLUB_NOTIFICATION_EMAIL=Clubcavm@gmail.com
 NOTIFICATION_FROM_EMAIL=CAVM Club <onboarding@resend.dev>
 ```
 
-Use a verified sender or domain in Resend if required. If `RESEND_API_KEY` is missing, the submission is still saved in admin, but no email is sent.
+If `RESEND_API_KEY` is missing, the dashboard still stores submissions, but email notifications will not be sent.
 
-## 4. Event Operation
+## 17. Netlify And Production Storage
 
-Admins can manage events from:
+The app is a real dynamic Next.js application.
 
-```text
-/admin/events
-```
+It uses:
 
-Recommended workflow:
+- Protected admin pages.
+- Server actions.
+- Prisma seed data.
+- Netlify server functions.
+- Netlify Blobs for live admin edits and visitor submissions.
+- Optional Resend email notifications.
 
-1. Create the event with title, date, time, location, category, image, description, and status.
-2. Use `upcoming` while registration is open.
-3. Use `closing soon` when the deadline is near.
-4. Use `closed` if registration should stop before the event date.
-5. Use `completed` after the event has happened.
-6. Add event photos to the correct archive album so media stays organized.
+Seeded launch content is bundled with SQLite. Live submissions and admin-managed edits are stored in Netlify Blobs.
 
-Upcoming and active events appear first on the public events page. Completed events remain visible as a club history archive.
+## 18. Daily Or Weekly Admin Checklist
 
-## 5. Opportunities
-
-Admins manage opportunities from:
-
-```text
-/admin/opportunities
-```
-
-Use this area for internships, volunteering, research roles, farm visits, jobs, training programs, scholarships, competitions, conferences, government opportunities, and programs abroad.
-
-When a partner submits an opportunity, review it in `/admin/partner-submissions`. Approved partner submissions can become public opportunities.
-
-## 6. Achievements, Alumni, Members, and Media
-
-Admin pages:
-
-```text
-/admin/achievements
-/admin/alumni
-/admin/members
-/admin/media
-```
-
-Use these areas to keep the public presence current:
-
-- Achievements: awards, community initiatives, exhibitions, official visits, public activities, and recognitions.
-- Alumni: graduate stories, roles, advice, and CAVM pathways.
-- Members: committee names, roles, student IDs, generated UAEU email addresses, and leadership areas.
-- Media: curated photo/video items and links to organized event albums.
-
-Use approved photos only, and keep each event album connected to the correct event.
-
-## 7. Production Storage
-
-The app is a real dynamic Next.js application, not a static demo. It includes:
-
-- Protected admin dashboard.
-- Dynamic forms.
-- Prisma schema and seed data.
-- Netlify server function deployment.
-- Netlify Blobs storage for visitor submissions and admin-managed content.
-- Email notification integration through Resend.
-
-Production storage note: SQLite is used for seeded launch content. On Netlify, visitor submissions and admin-created or admin-deleted records are stored in Netlify Blobs, including student registrations, partner submissions, contact messages, opportunity updates, events, achievements, media, members, and alumni.
-
-Email notifications are still recommended as an extra record for new form submissions.
-
-## 8. Local Development
-
-Install dependencies and start the app:
-
-```bash
-pnpm install
-cp .env.example .env
-pnpm db:generate
-pnpm db:push
-pnpm db:seed
-pnpm dev
-```
-
-Open:
-
-```text
-http://localhost:3000
-```
-
-Run checks:
-
-```bash
-pnpm run lint
-pnpm run build
-```
-
-## 9. Netlify Deployment
-
-The project is configured for Netlify in `netlify.toml`.
-
-Required build command:
-
-```bash
-pnpm run db:touch && pnpm run db:generate && pnpm run db:push && pnpm run db:seed && pnpm run build
-```
-
-Publish directory:
-
-```text
-.next
-```
-
-Required environment variables:
-
-```text
-DATABASE_URL=file:./dev.db
-ADMIN_USERNAME=<admin username>
-ADMIN_PASSWORD=<strong admin password>
-AUTH_SECRET=<long random secret>
-CLUB_NOTIFICATION_EMAIL=Clubcavm@gmail.com
-RESEND_API_KEY=<optional but recommended>
-NOTIFICATION_FROM_EMAIL=<verified sender>
-```
-
-## 10. Admin Checklist
-
-Before sharing the site widely:
-
-- Confirm the public pages load.
-- Confirm `/admin/login` works.
-- Confirm the contact form saves under `/admin/contact-submissions`.
-- Confirm Register Interest saves under `/admin/students`.
-- Confirm Partner With Us saves under `/admin/partner-submissions`.
-- Confirm event status labels are correct.
-- Confirm all media albums use the correct event photos.
-- Confirm email notifications reach `Clubcavm@gmail.com`.
-- Confirm admin credentials are not shared publicly.
-- Confirm Netlify Blobs submissions are visible in admin after deployment.
+- Check Contact Messages for unread items.
+- Check Partner Submissions for pending proposals.
+- Check Students for new interest registrations.
+- Check Events to make sure upcoming activities have the correct submission status.
+- Check Opportunities to close expired items.
+- Check Achievements and Media after every major club event.
+- Check Audit Log after major updates.
+- Log out when finished.
