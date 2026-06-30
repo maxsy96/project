@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { clearAdminSession } from "@/lib/auth";
+import { clearAdminSession, currentAdminUsername } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/audit-log";
 
 const adminLinks = [
   ["Overview", "/admin"],
@@ -13,10 +14,13 @@ const adminLinks = [
   ["Alumni", "/admin/alumni"],
   ["Partner submissions", "/admin/partner-submissions"],
   ["Contact messages", "/admin/contact-submissions"],
+  ["Audit log", "/admin/audit-log"],
 ];
 
 async function logoutAction() {
   "use server";
+  const actor = await currentAdminUsername();
+  await logAuditEvent({ actor, action: "logged out", entityType: "Auth" });
   await clearAdminSession();
   redirect("/admin/login");
 }

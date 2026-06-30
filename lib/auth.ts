@@ -25,6 +25,19 @@ function sign(username: string, timestamp: string) {
   return crypto.createHmac("sha256", authSecret()).update(`${username}:${timestamp}`).digest("hex");
 }
 
+function verifyAdminToken(token?: string) {
+  if (!token) return null;
+  const [username, timestamp, signature] = token.split(":");
+  if (!username || !timestamp || !signature) return null;
+  if (username !== adminUsername()) return null;
+  const age = Date.now() - Number(timestamp);
+  if (!Number.isFinite(age) || age > 1000 * 60 * 60 * 8) return null;
+
+  const expectedSignature = sign(username, timestamp);
+  if (signature.length !== expectedSignature.length) return null;
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature)) ? username : null;
+}
+
 export async function createAdminSession(username: string) {
   const timestamp = Date.now().toString();
   const token = `${username}:${timestamp}:${sign(username, timestamp)}`;
@@ -45,14 +58,12 @@ export async function clearAdminSession() {
 
 export async function isAdmin() {
   const cookieStore = await cookies();
-  const token = cookieStore.get(cookieName)?.value;
-  if (!token) return false;
-  const [username, timestamp, signature] = token.split(":");
-  if (!username || !timestamp || !signature) return false;
-  if (username !== adminUsername()) return false;
-  const age = Date.now() - Number(timestamp);
-  if (!Number.isFinite(age) || age > 1000 * 60 * 60 * 8) return false;
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(sign(username, timestamp)));
+  return Boolean(verifyAdminToken(cookieStore.get(cookieName)?.value));
+}
+
+export async function currentAdminUsername() {
+  const cookieStore = await cookies();
+  return verifyAdminToken(cookieStore.get(cookieName)?.value);
 }
 
 export async function requireAdmin() {

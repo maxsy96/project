@@ -8,11 +8,13 @@ import {
   adminUsername,
   requireAdmin,
 } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/audit-log";
 import {
   createStoredAchievement,
   createStoredEvent,
   deleteStoredAchievement,
   deleteStoredEvent,
+  getStoredAchievements,
   getStoredEvents,
   markDatabaseAchievementDeleted,
   markDatabaseEventDeleted,
@@ -31,7 +33,12 @@ import {
   deleteMemberById,
   deleteOpportunityById,
   deletePartnerSubmissionById,
+  getAllAlumni,
+  getAllContactSubmissions,
+  getAllMediaItems,
+  getAllMembers,
   getAllOpportunities,
+  getOpportunityById,
   getPartnerSubmissionById,
   approvePartnerSubmissionWithOpportunity,
   saveOpportunity,
@@ -83,9 +90,17 @@ export async function adminLoginAction(_state: { message: string }, formData: Fo
   const username = formString(formData, "username") || formString(formData, "email");
   const password = formString(formData, "password");
   if (username !== adminUsername() || password !== adminPassword()) {
+    await logAuditEvent({
+      actor: username || "Unknown admin",
+      action: "failed login",
+      entityType: "Auth",
+      status: "failed",
+      details: { username: username || "blank" },
+    });
     return { message: "Invalid admin username or password." };
   }
   await createAdminSession(username);
+  await logAuditEvent({ actor: username, action: "logged in", entityType: "Auth" });
   redirect("/admin");
 }
 
@@ -119,40 +134,73 @@ function opportunityData(formData: FormData) {
 export async function createOpportunityAction(formData: FormData) {
   await requireAdmin();
   const data = opportunityData(formData);
-  await saveOpportunity({
+  const saved = await saveOpportunity({
     ...data,
     slug: await uniqueOpportunitySlug(data.title),
   });
+  await logAuditEvent({
+    action: "created opportunity",
+    entityType: "Opportunity",
+    entityId: saved.id,
+    entityName: saved.title,
+    details: { status: saved.status, type: saved.type },
+  });
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/opportunities");
 }
 
 export async function updateOpportunityAction(id: number, formData: FormData) {
   await requireAdmin();
   const data = opportunityData(formData);
-  await saveOpportunity({
+  const saved = await saveOpportunity({
     ...data,
     slug: await uniqueOpportunitySlug(data.title, id),
   }, id);
+  await logAuditEvent({
+    action: "updated opportunity",
+    entityType: "Opportunity",
+    entityId: saved.id,
+    entityName: saved.title,
+    details: { status: saved.status, type: saved.type },
+  });
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/opportunities");
 }
 
 export async function deleteOpportunityAction(id: number) {
   await requireAdmin();
+  const opportunity = await getOpportunityById(id);
   await deleteOpportunityById(id);
+  await logAuditEvent({
+    action: "deleted opportunity",
+    entityType: "Opportunity",
+    entityId: id,
+    entityName: opportunity?.title || "",
+    details: { status: opportunity?.status || "" },
+  });
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/opportunities");
 }
 
 export async function archiveOpportunityAction(id: number) {
   await requireAdmin();
-  await updateOpportunityStatus(id, "closed");
+  const opportunity = await updateOpportunityStatus(id, "closed");
+  await logAuditEvent({
+    action: "closed opportunity",
+    entityType: "Opportunity",
+    entityId: id,
+    entityName: opportunity?.title || "",
+    details: { status: "closed" },
+  });
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/opportunities");
 }
 
@@ -161,7 +209,7 @@ export async function approvePartnerSubmissionAction(id: number) {
   const submission = await getPartnerSubmissionById(id);
   if (!submission) redirect("/admin/partner-submissions");
   const title = submission.opportunityTitle;
-  await approvePartnerSubmissionWithOpportunity(id, {
+  const result = await approvePartnerSubmissionWithOpportunity(id, {
     title,
     slug: await uniqueOpportunitySlug(title),
     organization: submission.organizationName,
@@ -185,47 +233,97 @@ export async function approvePartnerSubmissionAction(id: number) {
     approvalStatus: "approved",
     imageUrl: "/images/events/cavm-event-09.jpg",
   });
+  await logAuditEvent({
+    action: "approved partner submission",
+    entityType: "Partner submission",
+    entityId: id,
+    entityName: submission.opportunityTitle,
+    details: { organization: submission.organizationName, opportunityCreated: result?.opportunity.title || "" },
+  });
   revalidatePath("/opportunities");
   revalidatePath("/admin/partner-submissions");
   revalidatePath("/admin/opportunities");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/partner-submissions");
 }
 
 export async function rejectPartnerSubmissionAction(id: number) {
   await requireAdmin();
-  await updatePartnerSubmissionStatus(id, "rejected");
+  const submission = await updatePartnerSubmissionStatus(id, "rejected");
+  await logAuditEvent({
+    action: "rejected partner submission",
+    entityType: "Partner submission",
+    entityId: id,
+    entityName: submission?.opportunityTitle || "",
+    details: { organization: submission?.organizationName || "" },
+  });
   revalidatePath("/admin/partner-submissions");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/partner-submissions");
 }
 
 export async function deletePartnerSubmissionAction(id: number) {
   await requireAdmin();
+  const submission = await getPartnerSubmissionById(id);
   await deletePartnerSubmissionById(id);
+  await logAuditEvent({
+    action: "deleted partner submission",
+    entityType: "Partner submission",
+    entityId: id,
+    entityName: submission?.opportunityTitle || "",
+    details: { organization: submission?.organizationName || "" },
+  });
   revalidatePath("/admin/partner-submissions");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/partner-submissions");
 }
 
 export async function markContactReadAction(id: number, status: string) {
   await requireAdmin();
-  await updateContactStatus(id, status);
+  const message = await updateContactStatus(id, status);
+  await logAuditEvent({
+    action: `marked contact message ${status}`,
+    entityType: "Contact message",
+    entityId: id,
+    entityName: message?.subject || "",
+    details: { sender: message?.name || "", status },
+  });
   revalidatePath("/admin/contact-submissions");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/contact-submissions");
 }
 
 export async function deleteContactAction(id: number) {
   await requireAdmin();
+  const message = (await getAllContactSubmissions()).find((item) => item.id === id);
   await deleteContactSubmissionById(id);
+  await logAuditEvent({
+    action: "deleted contact message",
+    entityType: "Contact message",
+    entityId: id,
+    entityName: message?.subject || "",
+    details: { sender: message?.name || "" },
+  });
   revalidatePath("/admin/contact-submissions");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/contact-submissions");
 }
 
 export async function createEventAction(formData: FormData) {
   await requireAdmin();
   const data = eventData(formData, await uniqueEventSlug(formString(formData, "title")));
-  await createStoredEvent(data);
+  const event = await createStoredEvent(data);
+  await logAuditEvent({
+    action: "created event",
+    entityType: "Event",
+    entityId: event.id,
+    entityName: event.title,
+    details: { status: event.status, submissions: event.submissionStatus },
+  });
   revalidatePath("/");
   revalidatePath("/events");
   revalidatePath("/admin/events");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/events");
 }
 
@@ -283,46 +381,68 @@ function eventDataFromExisting(event: ExistingEvent, submissionStatus: string) {
 export async function updateEventAction(id: number, formData: FormData) {
   await requireAdmin();
   let slug = "";
+  let data: ReturnType<typeof eventData> | null = null;
 
   if (id < 0) {
     const storedEvents = await getStoredEvents();
     const existingSlug = storedEvents.find((event) => event.id === id)?.slug;
     slug = existingSlug ?? await uniqueEventSlug(formString(formData, "title"));
-    await updateStoredEvent(id, eventData(formData, slug));
+    data = eventData(formData, slug);
+    await updateStoredEvent(id, data);
   } else {
     const databaseEvent = await prisma.event.findUnique({ where: { id } });
     if (!databaseEvent) return;
     slug = databaseEvent.slug;
-    await upsertStoredEventBySlug(eventData(formData, slug));
+    data = eventData(formData, slug);
+    await upsertStoredEventBySlug(data);
   }
 
+  await logAuditEvent({
+    action: "updated event",
+    entityType: "Event",
+    entityId: id,
+    entityName: data?.title || "",
+    details: { status: data?.status || "", submissions: data?.submissionStatus || "" },
+  });
   revalidatePath("/");
   revalidatePath("/events");
   if (slug) revalidatePath(`/events/${slug}`);
   revalidatePath("/admin/events");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/events");
 }
 
 export async function updateEventSubmissionStatusAction(id: number, submissionStatus: string) {
   await requireAdmin();
   let slug = "";
+  let eventName = "";
 
   if (id < 0) {
     const existing = (await getStoredEvents()).find((event) => event.id === id);
     if (!existing) redirect("/admin/events");
     slug = existing.slug;
+    eventName = existing.title;
     await updateStoredEvent(id, eventDataFromExisting(existing, submissionStatus));
   } else {
     const databaseEvent = await prisma.event.findUnique({ where: { id } });
     if (!databaseEvent) redirect("/admin/events");
     slug = databaseEvent.slug;
+    eventName = databaseEvent.title;
     await upsertStoredEventBySlug(eventDataFromExisting(databaseEvent, submissionStatus));
   }
 
+  await logAuditEvent({
+    action: "changed event submissions",
+    entityType: "Event",
+    entityId: id,
+    entityName: eventName,
+    details: { submissions: submissionStatus },
+  });
   revalidatePath("/");
   revalidatePath("/events");
   if (slug) revalidatePath(`/events/${slug}`);
   revalidatePath("/admin/events");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/events");
 }
 
@@ -334,9 +454,17 @@ export async function deleteEventAction(id: number) {
       const databaseEvent = await prisma.event.findUnique({ where: { slug: storedEvent.slug } });
       if (databaseEvent) await markDatabaseEventDeleted(storedEvent.slug);
     }
+    await logAuditEvent({
+      action: "deleted event",
+      entityType: "Event",
+      entityId: id,
+      entityName: storedEvent?.title || "",
+      details: { slug: storedEvent?.slug || "" },
+    });
     revalidatePath("/");
     revalidatePath("/events");
     revalidatePath("/admin/events");
+    revalidatePath("/admin/audit-log");
     redirect("/admin/events");
   }
 
@@ -344,16 +472,24 @@ export async function deleteEventAction(id: number) {
   if (databaseEvent) {
     await markDatabaseEventDeleted(databaseEvent.slug);
   }
+  await logAuditEvent({
+    action: "deleted event",
+    entityType: "Event",
+    entityId: id,
+    entityName: databaseEvent?.title || "",
+    details: { slug: databaseEvent?.slug || "" },
+  });
   revalidatePath("/");
   revalidatePath("/events");
   revalidatePath("/admin/events");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/events");
 }
 
 export async function createAchievementAction(formData: FormData) {
   await requireAdmin();
   const date = dateOrNull(formString(formData, "date"));
-  await createStoredAchievement({
+  const achievement = await createStoredAchievement({
     title: formString(formData, "title"),
     description: formString(formData, "description"),
     category: formString(formData, "category"),
@@ -362,8 +498,16 @@ export async function createAchievementAction(formData: FormData) {
     imageUrl: formString(formData, "imageUrl"),
     externalUrl: formString(formData, "externalUrl"),
   });
+  await logAuditEvent({
+    action: "created achievement",
+    entityType: "Achievement",
+    entityId: achievement.id,
+    entityName: achievement.title,
+    details: { category: achievement.category, year: achievement.year },
+  });
   revalidatePath("/achievements");
   revalidatePath("/admin/achievements");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/achievements");
 }
 
@@ -382,30 +526,55 @@ function achievementData(formData: FormData) {
 
 export async function updateAchievementAction(id: number, formData: FormData) {
   await requireAdmin();
-  await upsertStoredAchievement(id, achievementData(formData));
+  const achievement = await upsertStoredAchievement(id, achievementData(formData));
+  await logAuditEvent({
+    action: "updated achievement",
+    entityType: "Achievement",
+    entityId: id,
+    entityName: achievement.title,
+    details: { category: achievement.category, year: achievement.year },
+  });
   revalidatePath("/achievements");
   revalidatePath("/admin/achievements");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/achievements");
 }
 
 export async function deleteAchievementAction(id: number) {
   await requireAdmin();
+  const storedAchievement = (await getStoredAchievements()).find((achievement) => achievement.id === id);
+  const databaseAchievement = storedAchievement ? null : await prisma.achievement.findUnique({ where: { id } });
+  const achievementName = storedAchievement?.title || databaseAchievement?.title || "";
   if (await deleteStoredAchievement(id)) {
     await markDatabaseAchievementDeleted(id);
+    await logAuditEvent({
+      action: "deleted achievement",
+      entityType: "Achievement",
+      entityId: id,
+      entityName: achievementName,
+    });
     revalidatePath("/achievements");
     revalidatePath("/admin/achievements");
+    revalidatePath("/admin/audit-log");
     redirect("/admin/achievements");
   }
 
   await markDatabaseAchievementDeleted(id);
+  await logAuditEvent({
+    action: "deleted achievement",
+    entityType: "Achievement",
+    entityId: id,
+    entityName: achievementName,
+  });
   revalidatePath("/achievements");
   revalidatePath("/admin/achievements");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/achievements");
 }
 
 export async function createMediaAction(formData: FormData) {
   await requireAdmin();
-  await createMediaItem({
+  const item = await createMediaItem({
     title: formString(formData, "title"),
     description: formString(formData, "description"),
     category: formString(formData, "category"),
@@ -414,16 +583,33 @@ export async function createMediaAction(formData: FormData) {
     videoUrl: formString(formData, "videoUrl"),
     date: dateOrNull(formString(formData, "date")),
   });
+  await logAuditEvent({
+    action: "created media item",
+    entityType: "Media",
+    entityId: item.id,
+    entityName: item.title,
+    details: { category: item.category, mediaType: item.mediaType },
+  });
   revalidatePath("/media");
   revalidatePath("/admin/media");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/media");
 }
 
 export async function deleteMediaAction(id: number) {
   await requireAdmin();
+  const item = (await getAllMediaItems()).find((mediaItem) => mediaItem.id === id);
   await deleteMediaItemById(id);
+  await logAuditEvent({
+    action: "deleted media item",
+    entityType: "Media",
+    entityId: id,
+    entityName: item?.title || "",
+    details: { category: item?.category || "" },
+  });
   revalidatePath("/media");
   revalidatePath("/admin/media");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/media");
 }
 
@@ -431,7 +617,7 @@ export async function createMemberAction(formData: FormData) {
   await requireAdmin();
   const studentId = formString(formData, "studentId");
   const email = formString(formData, "email") || (studentId ? `${studentId}@uaeu.ac.ae` : "");
-  await createMember({
+  const member = await createMember({
     name: formString(formData, "name"),
     studentId,
     email,
@@ -444,22 +630,39 @@ export async function createMemberAction(formData: FormData) {
     order: Number(formString(formData, "order")) || 0,
     isActive: true,
   });
+  await logAuditEvent({
+    action: "created member",
+    entityType: "Member",
+    entityId: member.id,
+    entityName: member.name,
+    details: { role: member.role, committee: member.committee },
+  });
   revalidatePath("/members");
   revalidatePath("/admin/members");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/members");
 }
 
 export async function deleteMemberAction(id: number) {
   await requireAdmin();
+  const member = (await getAllMembers()).find((item) => item.id === id);
   await deleteMemberById(id);
+  await logAuditEvent({
+    action: "deleted member",
+    entityType: "Member",
+    entityId: id,
+    entityName: member?.name || "",
+    details: { role: member?.role || "" },
+  });
   revalidatePath("/members");
   revalidatePath("/admin/members");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/members");
 }
 
 export async function createAlumniAction(formData: FormData) {
   await requireAdmin();
-  await createAlumni({
+  const person = await createAlumni({
     name: formString(formData, "name"),
     graduationYear: formString(formData, "graduationYear"),
     currentRole: formString(formData, "currentRole"),
@@ -469,15 +672,32 @@ export async function createAlumniAction(formData: FormData) {
     imageUrl: formString(formData, "imageUrl"),
     socialUrl: formString(formData, "socialUrl"),
   });
+  await logAuditEvent({
+    action: "created alumni profile",
+    entityType: "Alumni",
+    entityId: person.id,
+    entityName: person.name,
+    details: { graduationYear: person.graduationYear, currentRole: person.currentRole },
+  });
   revalidatePath("/alumni");
   revalidatePath("/admin/alumni");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/alumni");
 }
 
 export async function deleteAlumniAction(id: number) {
   await requireAdmin();
+  const person = (await getAllAlumni()).find((item) => item.id === id);
   await deleteAlumniById(id);
+  await logAuditEvent({
+    action: "deleted alumni profile",
+    entityType: "Alumni",
+    entityId: id,
+    entityName: person?.name || "",
+    details: { graduationYear: person?.graduationYear || "" },
+  });
   revalidatePath("/alumni");
   revalidatePath("/admin/alumni");
+  revalidatePath("/admin/audit-log");
   redirect("/admin/alumni");
 }
