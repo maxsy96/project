@@ -74,16 +74,21 @@ const eventRegistrationSchema = z.object({
   message: z.string().optional(),
 });
 
-function validationState(error: z.ZodError): ActionState {
+function formLocale(formData: FormData) {
+  return formString(formData, "locale") === "ar" ? "ar" : "en";
+}
+
+function validationState(error: z.ZodError, locale: "en" | "ar" = "en"): ActionState {
   return {
     ok: false,
-    message: "Please check the highlighted fields.",
+    message: locale === "ar" ? "يرجى مراجعة الحقول المحددة." : "Please check the highlighted fields.",
     errors: error.flatten().fieldErrors,
   };
 }
 
 export async function registerInterestAction(_state: ActionState, formData: FormData): Promise<ActionState> {
-  if (formString(formData, "company")) return { ok: true, message: "Thanks." };
+  const locale = formLocale(formData);
+  if (formString(formData, "company")) return { ok: true, message: locale === "ar" ? "شكراً." : "Thanks." };
 
   const parsed = studentSchema.safeParse({
     fullName: formString(formData, "fullName"),
@@ -100,7 +105,7 @@ export async function registerInterestAction(_state: ActionState, formData: Form
     consent: formString(formData, "consent"),
   });
 
-  if (!parsed.success) return validationState(parsed.error);
+  if (!parsed.success) return validationState(parsed.error, locale);
 
   const student = await createStudentInterest({
     ...parsed.data,
@@ -131,11 +136,12 @@ export async function registerInterestAction(_state: ActionState, formData: Form
   );
 
   revalidatePath("/admin/students");
-  redirect(`/register-interest/success?id=${student.id}`);
+  redirect(`${locale === "ar" ? "/ar" : ""}/register-interest/success?id=${student.id}`);
 }
 
 export async function partnerSubmissionAction(_state: ActionState, formData: FormData): Promise<ActionState> {
-  if (formString(formData, "company")) return { ok: true, message: "Thanks." };
+  const locale = formLocale(formData);
+  if (formString(formData, "company")) return { ok: true, message: locale === "ar" ? "شكراً." : "Thanks." };
 
   const parsed = partnerSchema.safeParse({
     organizationName: formString(formData, "organizationName"),
@@ -154,7 +160,7 @@ export async function partnerSubmissionAction(_state: ActionState, formData: For
     consent: formString(formData, "consent"),
   });
 
-  if (!parsed.success) return validationState(parsed.error);
+  if (!parsed.success) return validationState(parsed.error, locale);
 
   const {
     organizationName,
@@ -193,7 +199,9 @@ export async function partnerSubmissionAction(_state: ActionState, formData: For
     console.error("[partner-submission:save-failed]", error);
     return {
       ok: false,
-      message: "The partner submission could not be saved. Please try again or email Clubcavm@gmail.com.",
+      message: locale === "ar"
+        ? "تعذر حفظ طلب الشراكة. يرجى المحاولة مرة أخرى أو التواصل عبر Clubcavm@gmail.com."
+        : "The partner submission could not be saved. Please try again or email Clubcavm@gmail.com.",
     };
   }
 
@@ -218,11 +226,12 @@ export async function partnerSubmissionAction(_state: ActionState, formData: For
   );
 
   revalidatePath("/admin/partner-submissions");
-  return { ok: true, message: "Thank you for submitting. The CAVM Team will be in touch." };
+  return { ok: true, message: locale === "ar" ? "شكراً لإرسال الطلب. سيتواصل معكم فريق نادي الكلية قريباً." : "Thank you for submitting. The CAVM Team will be in touch." };
 }
 
 export async function contactAction(_state: ActionState, formData: FormData): Promise<ActionState> {
-  if (formString(formData, "company")) return { ok: true, message: "Thanks." };
+  const locale = formLocale(formData);
+  if (formString(formData, "company")) return { ok: true, message: locale === "ar" ? "شكراً." : "Thanks." };
 
   const parsed = contactSchema.safeParse({
     name: formString(formData, "name"),
@@ -231,7 +240,7 @@ export async function contactAction(_state: ActionState, formData: FormData): Pr
     message: formString(formData, "message"),
   });
 
-  if (!parsed.success) return validationState(parsed.error);
+  if (!parsed.success) return validationState(parsed.error, locale);
 
   await createContactSubmission(parsed.data);
   await queueNotification(
@@ -246,7 +255,7 @@ export async function contactAction(_state: ActionState, formData: FormData): Pr
   );
   revalidatePath("/admin/contact-submissions");
 
-  return { ok: true, message: "Thank you for submitting. The CAVM Team will be in touch." };
+  return { ok: true, message: locale === "ar" ? "شكراً لتواصلكم. سيتابع فريق نادي الكلية الرسالة قريباً." : "Thank you for submitting. The CAVM Team will be in touch." };
 }
 
 export async function interestedAction(formData: FormData) {
