@@ -5,6 +5,7 @@ import { sectors, opportunityTypes } from "@/lib/constants";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminTable, AdminTd, AdminTh } from "@/components/admin-table";
 import { Pill } from "@/components/ui";
+import { isOpportunityOpen } from "@/lib/opportunity-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function AdminStudentsPage({ searchParams }: { searchParams
     getAllOpportunities(),
   ]);
   students.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  const approvedOpportunities = opportunities.filter((opportunity) => opportunity.approvalStatus === "approved" && opportunity.status !== "closed");
+  const approvedOpportunities = opportunities.filter((opportunity) => isOpportunityOpen(opportunity));
   const filtered = students.filter((student) => {
     const studentSectors = fromJsonList(student.interests);
     const prefs = fromJsonList(student.opportunityPreferences);

@@ -270,7 +270,7 @@ export async function interestedAction(formData: FormData) {
   }
 
   const opportunity = await getOpportunityBySlug(opportunitySlug);
-  if (!opportunity || !isOpportunityOpen(opportunity.status)) {
+  if (!opportunity || !isOpportunityOpen(opportunity)) {
     redirect(`/opportunities/${opportunitySlug}?submitted=closed`);
   }
 

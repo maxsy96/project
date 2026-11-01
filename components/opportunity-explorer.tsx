@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { opportunityTypes, sectors } from "@/lib/constants";
 import { fromJsonList } from "@/lib/utils";
 import { EmptyState, StatusBadge } from "@/components/ui";
 import { OpportunityCard } from "@/components/cards";
+import { getOpportunityStatus, opportunityStatuses, sortOpportunitiesForDisplay } from "@/lib/opportunity-utils";
 
 type Opportunity = {
   id: number;
@@ -24,13 +25,27 @@ type Opportunity = {
   eligibility: string;
   applicationUrl: string;
   status: string;
+  approvalStatus: string;
   imageUrl: string;
 };
 
 const paidOptions = ["Paid", "Unpaid", "Funded", "Certificate"];
-const statusOptions = ["open", "closing soon", "closed"];
+const statusOptions = opportunityStatuses;
 
-export function OpportunityExplorer({ opportunities }: { opportunities: Opportunity[] }) {
+export function OpportunityExplorer({ opportunities, checkedAt }: { opportunities: Opportunity[]; checkedAt: number }) {
+  const [now, setNow] = useState(checkedAt);
+  useEffect(() => {
+    const refresh = () => setNow(Date.now());
+    const nextDeadline = Math.min(...opportunities
+      .map((opportunity) => opportunity.deadline === null ? Infinity : new Date(opportunity.deadline).getTime())
+      .filter((deadline) => Number.isFinite(deadline) && deadline > now));
+    const timer = setTimeout(refresh, Math.max(1, Math.min(nextDeadline - Date.now() + 1, 2_147_483_647)));
+    window.addEventListener("focus", refresh);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [opportunities, now]);
   const [query, setQuery] = useState("");
   const [type, setType] = useState("");
   const [sector, setSector] = useState("");
@@ -42,7 +57,7 @@ export function OpportunityExplorer({ opportunities }: { opportunities: Opportun
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
-    return opportunities.filter((opportunity) => {
+    return sortOpportunitiesForDisplay(opportunities, now).filter((opportunity) => {
       const list = fromJsonList(opportunity.sectors);
       const haystack = [opportunity.title, opportunity.organization, opportunity.description, opportunity.location, opportunity.type, ...list]
         .join(" ")
@@ -51,14 +66,14 @@ export function OpportunityExplorer({ opportunities }: { opportunities: Opportun
         (!q || haystack.includes(q)) &&
         (!type || opportunity.type === type) &&
         (!sector || list.includes(sector)) &&
-        (!status || opportunity.status === status) &&
+        (!status || getOpportunityStatus(opportunity, now) === status) &&
         (!location || opportunity.location.toLowerCase().includes(location.toLowerCase())) &&
         (!paid || opportunity.paidStatus.toLowerCase().includes(paid.toLowerCase())) &&
         (!government || opportunity.isGovernmentRelated) &&
         (!abroad || opportunity.isAbroad)
       );
     });
-  }, [opportunities, query, type, sector, status, location, paid, government, abroad]);
+  }, [opportunities, now, query, type, sector, status, location, paid, government, abroad]);
 
   return (
     <div className="grid gap-8">
@@ -122,7 +137,7 @@ export function OpportunityExplorer({ opportunities }: { opportunities: Opportun
 
       {filtered.length ? (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((opportunity) => <OpportunityCard key={opportunity.id} opportunity={opportunity} />)}
+          {filtered.map((opportunity) => <OpportunityCard key={opportunity.id} opportunity={opportunity} now={now} />)}
         </div>
       ) : (
         <EmptyState title="No matching opportunities" description="Try widening the sector, type, location, or keyword filters." />

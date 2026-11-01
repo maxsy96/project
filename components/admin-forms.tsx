@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { fromJsonList } from "@/lib/utils";
 import { AdminImageField } from "@/components/admin-image-field";
 import { AdminAlbumUploadField } from "@/components/admin-album-upload-field";
+import { opportunityStatuses } from "@/lib/opportunity-utils";
 
 type Opportunity = {
   title?: string;
@@ -22,6 +23,7 @@ type Opportunity = {
   applicationUrl?: string;
   contactEmail?: string;
   status?: string;
+  approvalStatus?: string;
   source?: string;
   imageUrl?: string;
 };
@@ -126,10 +128,17 @@ export function OpportunityAdminForm({ action, opportunity }: { action: (formDat
         <label className="block text-sm font-semibold text-slate-800">
           Status
           <select name="status" defaultValue={opportunity?.status || "open"} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
-            <option value="open">open</option>
-            <option value="closing soon">closing soon</option>
-            <option value="closed">closed</option>
+            {opportunityStatuses.map((status) => <option key={status}>{status}</option>)}
           </select>
+        </label>
+        <label className="block text-sm font-semibold text-slate-800">
+          Publication approval
+          <select name="approvalStatus" defaultValue={opportunity?.approvalStatus || "pending"} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
+            <option value="pending">pending confirmation</option>
+            <option value="approved">approved</option>
+            <option value="rejected">rejected</option>
+          </select>
+          <span className="mt-2 block text-xs font-normal text-slate-500">Approve after confirming institutional and host authorization, the schedule, and the application deadline.</span>
         </label>
       </div>
       <fieldset>
@@ -173,7 +182,7 @@ export function EventAdminForm({ action, event }: { action: (formData: FormData)
         </label>
         <label className="block text-sm font-semibold text-slate-800">
           Status
-          <select name="status" defaultValue={event?.status || "upcoming"} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
+          <select name="status" defaultValue={event?.status || "proposed"} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
             {eventStatuses.map((item) => <option key={item}>{item}</option>)}
           </select>
         </label>
@@ -183,7 +192,7 @@ export function EventAdminForm({ action, event }: { action: (formData: FormData)
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block text-sm font-semibold text-slate-800">
           Submissions
-          <select name="submissionStatus" defaultValue={event?.submissionStatus || "open"} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
+          <select name="submissionStatus" defaultValue={event?.submissionStatus || (event ? "open" : "closed")} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm">
             {submissionStatuses.map((item) => <option key={item}>{item}</option>)}
           </select>
         </label>

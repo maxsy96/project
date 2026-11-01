@@ -110,16 +110,27 @@ Opportunity statuses:
 | `open` | Students can apply or send interest |
 | `closing soon` | Deadline is near, but submissions are still accepted |
 | `closed` | Students should no longer submit interest or apply from the website |
+| `completed` | The organizer has confirmed that this specific activity or intake took place |
+| `cancelled` | The organizer has confirmed cancellation |
+| `awaiting confirmation` | Details or approval need verification; applications are unavailable |
+
+Publication approval is a separate field: `pending`, `approved`, or `rejected`. New opportunities default to pending. Only approved records appear in the public Hub. Confirm institutional and host authorization before selecting approved, and record the dated approval reference in Source.
+
+Public badges, filters, sorting, recommendations, admin open counts, and the submission action evaluate the latest record's deadline and approval as well as its stored status. An elapsed or invalid deadline closes an otherwise open application window. The deadline is evaluated as its stored timestamp; a date entered through the current admin form is stored at 09:00 UTC (13:00 UAE time). Confirm the intended cutoff with the organizer when reopening. A null deadline permits rolling applications only on an explicitly approved open record. The Hub updates its availability display at deadline rollover while the page is open.
+
+Before closing a live record, check its latest admin deadline and any organizer extension. Preserve a confirmed future deadline; never replace it with an older seed date. To reopen a previously closed opportunity, record the confirmed new deadline and select open or closing soon. An extension alone must not reopen a completed or cancelled record.
 
 Admin workflow:
 
 1. Use Create opportunity for a new item.
-2. Fill title, organization, type, sectors, location, deadline, description, requirements, benefits, contact email, source, image, and status.
+2. Fill title, organization, type, sectors, location, deadline, description, requirements, benefits, contact email, source, image, status, and publication approval.
 3. Use Edit to update an existing item.
 4. Use Archive to close an opportunity without deleting it.
 5. Use Delete only if the opportunity should be removed from admin and public view.
 
 Important: closed opportunities must not show `Apply externally` or `Send interest` on the public opportunity page.
+
+For the 2 November 2026 review, all 12 seed application deadlines had passed; 11 previously open or closing-soon records are now closed and SeaWorld remains closed. The five Fall 2026 proposed visits and the SeaWorld proposal are pending confirmation. These are seed corrections, not verification of current production overrides. Admin-edited Netlify Blobs records take precedence over seed content; inspect and update those individually where needed. Do not run the seed reset against live data to reconcile these listings.
 
 ## 7. Events And Activities
 
@@ -133,19 +144,19 @@ Events have two separate controls:
 
 | Control | What it affects |
 | --- | --- |
-| Event status | Public state of the event, such as upcoming, completed, cancelled, or closed |
+| Event status | Public state of the event, such as proposed, upcoming, completed, cancelled, or closed |
 | Submission status | Whether students can register: open, closing soon, or closed |
 
 Use event status for the activity timeline. Use submission status for registrations.
 
 Recommended workflow:
 
-1. Create the event with title, date, time, location, category, image, description, organizer, event status, and submission status.
-2. Keep event status as `upcoming` while the activity is in the future.
+1. Create the event with title, date, time, location, category, image, description, organizer, event status, and submission status. New events default to proposed with submissions closed.
+2. Use `proposed` until institutional and host approval and the schedule are confirmed. Proposed events cannot accept registrations or appear as upcoming activities. After confirmation, use `upcoming` for a future activity.
 3. Set submission status to `open` while students can register.
 4. Set submission status to `closing soon` when the deadline is near.
 5. Set submission status to `closed` when registration is full, the deadline passed, or the activity should no longer accept names.
-6. After the event happens, update event status to `completed`.
+6. After the organizer confirms the event happened, update event status to `completed`. A past date alone does not establish completion; use `cancelled` only with confirmation of cancellation.
 
 Important: if submission status is closed, the event page must not show a registration form or event registration link.
 

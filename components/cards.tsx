@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarDays, ExternalLink, MapPin } from "lucide-react";
 import { fromJsonList, formatDate } from "@/lib/utils";
 import { Pill, StatusBadge } from "@/components/ui";
+import { getOpportunityStatus } from "@/lib/opportunity-utils";
 
 type OpportunityLike = {
   id: number;
@@ -16,10 +17,11 @@ type OpportunityLike = {
   deadline: Date | null;
   description: string;
   status: string;
+  approvalStatus: string;
   imageUrl?: string;
 };
 
-export function OpportunityCard({ opportunity }: { opportunity: OpportunityLike }) {
+export function OpportunityCard({ opportunity, now }: { opportunity: OpportunityLike; now?: number }) {
   const sectors = fromJsonList(opportunity.sectors);
   return (
     <article className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -29,7 +31,7 @@ export function OpportunityCard({ opportunity }: { opportunity: OpportunityLike 
           <h3 className="mt-2 text-xl font-semibold text-slate-950">{opportunity.title}</h3>
           <p className="mt-1 text-sm text-slate-500">{opportunity.organization}</p>
         </div>
-        <StatusBadge status={opportunity.status} />
+        <StatusBadge status={getOpportunityStatus(opportunity, now)} />
       </div>
       <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-600">{opportunity.description}</p>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -85,7 +87,7 @@ export function EventCard({ event }: { event: EventLike }) {
         <h3 className="mt-4 text-xl font-semibold text-slate-950">{event.title}</h3>
         <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">{event.description}</p>
         <div className="mt-4 grid gap-2 text-sm text-slate-600">
-          <span>{formatDate(event.date)} at {event.time}</span>
+          <span>{event.status === "proposed" ? "Proposed date (unconfirmed): " : ""}{formatDate(event.date)} at {event.time}</span>
           <span>{event.location}</span>
           {event.submissionStatus ? <span className="font-semibold text-slate-800">Submissions: {event.submissionStatus}</span> : null}
         </div>

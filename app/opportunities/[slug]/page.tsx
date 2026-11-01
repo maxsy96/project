@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { interestedAction } from "@/lib/actions";
 import { getAllOpportunities, getOpportunityBySlug } from "@/lib/runtime-store";
-import { isOpportunityOpen } from "@/lib/opportunity-utils";
+import { getOpportunityStatus, isOpportunityOpen } from "@/lib/opportunity-utils";
 import { fromJsonList, formatDate } from "@/lib/utils";
 import { ButtonLink, PageHero, Pill, StatusBadge } from "@/components/ui";
 import { OpportunityCard } from "@/components/cards";
@@ -64,7 +64,7 @@ export default async function OpportunityDetailPage({
   const { submitted } = await searchParams;
   const opportunity = await getOpportunityBySlug(slug);
   if (!opportunity || opportunity.approvalStatus !== "approved") notFound();
-  const acceptingSubmissions = isOpportunityOpen(opportunity.status);
+  const acceptingSubmissions = isOpportunityOpen(opportunity);
   const sectorList = fromJsonList(opportunity.sectors);
   const related = (await getAllOpportunities())
     .filter((item) => item.approvalStatus === "approved" && item.id !== opportunity.id)
@@ -76,7 +76,7 @@ export default async function OpportunityDetailPage({
       <PageHero eyebrow={opportunity.type} title={opportunity.title} description={opportunity.description}>
         <div className="rounded-lg bg-white p-5 text-slate-950 shadow-sm">
           <div className="flex flex-wrap gap-2">
-            <StatusBadge status={opportunity.status} />
+            <StatusBadge status={getOpportunityStatus(opportunity)} />
             {sectorList.map((sector) => <Pill key={sector}>{sector}</Pill>)}
           </div>
           <p className="mt-4 text-sm text-slate-600">{opportunity.organization} - {opportunity.location}</p>

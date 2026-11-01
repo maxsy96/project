@@ -80,6 +80,7 @@ export const eventCategories = [
 export const eventStatuses = [
   "upcoming",
   "closing soon",
+  "proposed",
   "completed",
   "closed",
   "cancelled",

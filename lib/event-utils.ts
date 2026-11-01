@@ -6,19 +6,20 @@ export type EventForSorting = {
 
 export function eventStatusRank(status: string) {
   const normalized = status.toLowerCase();
-  if (normalized.includes("cancel")) return 3;
-  if (normalized.includes("complete") || normalized.includes("closed")) return 2;
-  return 1;
+  if (isActiveEventStatus(normalized)) return 1;
+  if (normalized === "proposed") return 2;
+  if (normalized.includes("cancel")) return 4;
+  return 3;
 }
 
 export function isActiveEventStatus(status: string) {
   const normalized = status.toLowerCase();
-  return !normalized.includes("complete") && !normalized.includes("closed") && !normalized.includes("cancel");
+  return normalized === "upcoming" || normalized === "closing soon";
 }
 
 export function isEventSubmissionOpen(eventStatus: string, submissionStatus = "open") {
   if (!isActiveEventStatus(eventStatus)) return false;
-  return submissionStatus.toLowerCase() !== "closed";
+  return submissionStatus === "open" || submissionStatus === "closing soon";
 }
 
 export function sortEventsForDisplay<T extends EventForSorting>(events: T[]) {
