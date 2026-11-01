@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "db:touch": "node -e \"const fs=require('fs');fs.mkdirSync('prisma',{recursive:true});for(const f of ['prisma/dev.db','prisma/dev.db-journal']){fs.rmSync(f,{force:true});}fs.closeSync(fs.openSync('prisma/dev.db','a'));\"",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

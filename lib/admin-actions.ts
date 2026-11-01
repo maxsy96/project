@@ -144,7 +144,9 @@ async function opportunityData(formData: FormData) {
     source: formString(formData, "source") || "Admin",
     imageUrl: await imageUrlFromFormData(formData),
     submittedByPartner: false,
-    approvalStatus: "approved",
+    approvalStatus: ["pending", "approved", "rejected"].includes(formString(formData, "approvalStatus"))
+      ? formString(formData, "approvalStatus")
+      : "pending",
   };
 }
 
@@ -160,7 +162,7 @@ export async function createOpportunityAction(formData: FormData) {
     entityType: "Opportunity",
     entityId: saved.id,
     entityName: saved.title,
-    details: { status: saved.status, type: saved.type },
+    details: { status: saved.status, type: saved.type, approvalStatus: saved.approvalStatus },
   });
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
@@ -180,7 +182,7 @@ export async function updateOpportunityAction(id: number, formData: FormData) {
     entityType: "Opportunity",
     entityId: saved.id,
     entityName: saved.title,
-    details: { status: saved.status, type: saved.type },
+    details: { status: saved.status, type: saved.type, approvalStatus: saved.approvalStatus },
   });
   revalidatePath("/opportunities");
   revalidatePath("/admin/opportunities");
@@ -360,8 +362,8 @@ async function eventData(formData: FormData, slug: string) {
     organizer: formString(formData, "organizer") || "CAVM Club",
     registrationUrl: formString(formData, "registrationUrl"),
     imageUrl: await imageUrlFromFormData(formData),
-    status: formString(formData, "status") || "upcoming",
-    submissionStatus: formString(formData, "submissionStatus") || "open",
+    status: formString(formData, "status") || "proposed",
+    submissionStatus: formString(formData, "submissionStatus") || "closed",
   };
 }
 

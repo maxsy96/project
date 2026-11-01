@@ -10,6 +10,7 @@ import {
   storedEventToView,
 } from "@/lib/admin-content-store";
 import { getAllOpportunities } from "@/lib/runtime-store";
+import { isOpportunityOpen, sortOpportunitiesForDisplay } from "@/lib/opportunity-utils";
 import { isActiveEventStatus, mergeEventsBySlug, sortEventsForDisplay } from "@/lib/event-utils";
 import { ButtonLink, SectionHeader } from "@/components/ui";
 import { OpportunityCard, EventCard, AchievementCard } from "@/components/cards";
@@ -166,14 +167,9 @@ export default async function Home() {
     getStoredAchievements(),
     getDeletedAchievementIds(),
   ]);
-  const opportunities = opportunityRows
-    .filter((opportunity) => opportunity.approvalStatus === "approved")
-    .sort((a, b) => {
-      const statusOrder = ["open", "closing soon", "closed"];
-      const statusDiff = statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
-      if (statusDiff) return statusDiff;
-      return (a.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER);
-    })
+  const opportunities = sortOpportunitiesForDisplay(
+    opportunityRows.filter((opportunity) => isOpportunityOpen(opportunity)),
+  )
     .slice(0, 3);
   const deletedEvents = new Set(deletedEventSlugs);
   const events = [
@@ -255,6 +251,7 @@ export default async function Home() {
         </div>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {opportunities.map((opportunity) => <OpportunityCard key={opportunity.id} opportunity={opportunity} />)}
+          {!opportunities.length ? <p className="text-sm text-slate-600 md:col-span-3">No applications are currently open. Visit the Opportunity Hub for previous listings and future updates.</p> : null}
         </div>
       </section>
 

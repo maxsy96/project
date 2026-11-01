@@ -11,6 +11,7 @@ import {
 import { AdminShell } from "@/components/admin-shell";
 import { StatusBadge } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { isOpportunityOpen } from "@/lib/opportunity-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function AdminOverviewPage() {
     ...storedEvents.map(storedEventToView).filter((event) => event.status === "upcoming"),
     ...databaseUpcomingEvents.filter((event) => !deleted.has(event.slug)),
   ].sort((a, b) => a.date.getTime() - b.date.getTime()).slice(0, 5);
-  const openOpportunities = opportunities.filter((opportunity) => ["open", "closing soon"].includes(opportunity.status)).length;
+  const openOpportunities = opportunities.filter((opportunity) => isOpportunityOpen(opportunity)).length;
   const latestMessages = recentMessages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 5);
 
   return (

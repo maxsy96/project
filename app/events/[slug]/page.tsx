@@ -72,9 +72,10 @@ export default async function EventDetailPage({
             <Image src={event.imageUrl} alt={event.title} width={1200} height={760} className="mb-6 h-80 w-full rounded-md object-cover" />
           ) : null}
           <h2 className="text-2xl font-semibold text-slate-950">Event details</h2>
+          {event.status === "proposed" ? <p className="mt-4 rounded-md bg-amber-50 p-3 text-sm font-semibold text-amber-800">Proposed activity. Institutional and host approval, the schedule, and delivery are awaiting confirmation. Registration is closed.</p> : null}
           <p className="mt-4 leading-7 text-slate-600">{event.description}</p>
           <dl className="mt-6 grid gap-4 rounded-lg bg-slate-50 p-5 sm:grid-cols-2">
-            <div><dt className="text-sm font-semibold text-slate-500">Date</dt><dd className="mt-1 font-medium">{formatDate(event.date)}</dd></div>
+            <div><dt className="text-sm font-semibold text-slate-500">{event.status === "proposed" ? "Proposed date (unconfirmed)" : "Date"}</dt><dd className="mt-1 font-medium">{formatDate(event.date)}</dd></div>
             <div><dt className="text-sm font-semibold text-slate-500">Time</dt><dd className="mt-1 font-medium">{event.time}</dd></div>
             <div><dt className="text-sm font-semibold text-slate-500">Expected duration</dt><dd className="mt-1 font-medium">{eventDurationLabel(event.category, event.title, event.description)}</dd></div>
             <div><dt className="text-sm font-semibold text-slate-500">Location</dt><dd className="mt-1 font-medium">{event.location}</dd></div>

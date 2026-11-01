@@ -6,6 +6,7 @@ import { fromJsonList, matchScore } from "@/lib/utils";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminTable, AdminTd, AdminTh } from "@/components/admin-table";
 import { ButtonLink, StatusBadge } from "@/components/ui";
+import { getOpportunityStatus } from "@/lib/opportunity-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,10 @@ export default async function AdminOpportunitiesPage() {
                   <p className="font-semibold text-slate-950">{opportunity.title}</p>
                   <p className="text-xs text-slate-500">{opportunity.organization} - {opportunity.type}</p>
                 </AdminTd>
-                <AdminTd><StatusBadge status={opportunity.status} /></AdminTd>
+                <AdminTd>
+                  <StatusBadge status={getOpportunityStatus(opportunity)} />
+                  <p className="mt-2 text-xs text-slate-500">Stored: {opportunity.status}; approval: {opportunity.approvalStatus}</p>
+                </AdminTd>
                 <AdminTd>{matching} students</AdminTd>
                 <AdminTd>
                   <div className="flex flex-wrap gap-2">

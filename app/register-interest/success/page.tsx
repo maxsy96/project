@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getAllOpportunities, getStudentInterestById } from "@/lib/runtime-store";
+import { isOpportunityOpen } from "@/lib/opportunity-utils";
 import { fromJsonList, matchScore } from "@/lib/utils";
 import { OpportunityCard } from "@/components/cards";
 import { ButtonLink, PageHero, Pill } from "@/components/ui";
@@ -11,7 +12,7 @@ export default async function RegisterSuccessPage({ searchParams }: { searchPara
   const { id } = await searchParams;
   const student = id ? await getStudentInterestById(Number(id)) : null;
   const opportunities = (await getAllOpportunities())
-    .filter((opportunity) => opportunity.approvalStatus === "approved" && opportunity.status !== "closed")
+    .filter((opportunity) => isOpportunityOpen(opportunity))
     .sort((a, b) => (a.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER));
   const matches = student
     ? opportunities
